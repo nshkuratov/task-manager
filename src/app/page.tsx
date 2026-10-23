@@ -1,7 +1,6 @@
-export default function HomePage() {
-  return (
-    <main className="p-8">
-      <h1 className="text-2xl font-semibold">Task Manager</h1>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { getSession } from "@/server/auth/session";
+
+export default async function HomePage() {
+  redirect((await getSession()) === null ? "/login" : "/lists");
 }

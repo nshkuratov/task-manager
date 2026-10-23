@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run db:migrate && npm run db:seed && npm run build",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" != production ]"
+}
