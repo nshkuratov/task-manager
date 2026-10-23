@@ -1,0 +1,101 @@
+name: CI
+
+# Runs only for code changes: these globs mirror CODE_RE in scripts/ci/is-code-change.sh
+# (YAML cannot read the script). Change both together, and keep the two lists identical.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".storybook/**"
+      - "drizzle/**"
+      - "tests/**"
+      - "e2e/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "next.config.*"
+      - "next-env.d.ts"
+      - "eslint.config.*"
+      - ".prettierrc*"
+      - ".prettierignore"
+      - "prettier.config.*"
+      - "vitest*.ts"
+      - "vitest*.mts"
+      - "vitest*.js"
+      - "vitest*.mjs"
+      - "playwright.config.*"
+      - "postcss.config.*"
+      - "tailwind.config.*"
+      - "drizzle.config.*"
+      - "components.json"
+      - ".nvmrc"
+      - "!**/*.md"
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".storybook/**"
+      - "drizzle/**"
+      - "tests/**"
+      - "e2e/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "next.config.*"
+      - "next-env.d.ts"
+      - "eslint.config.*"
+      - ".prettierrc*"
+      - ".prettierignore"
+      - "prettier.config.*"
+      - "vitest*.ts"
+      - "vitest*.mts"
+      - "vitest*.js"
+      - "vitest*.mjs"
+      - "playwright.config.*"
+      - "postcss.config.*"
+      - "tailwind.config.*"
+      - "drizzle.config.*"
+      - "components.json"
+      - ".nvmrc"
+      - "!**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # `next build` runs in production mode, which requires a >= 32-char secret. Not a real secret.
+      SESSION_SECRET: ci-only-session-secret-not-for-production-use
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
+
+      # Also on a cache hit: the cache holds the browser, not the apt packages it needs.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run -s check:full

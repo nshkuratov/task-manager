@@ -1,8 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * Next hands a segment's loading UI to every parallel route of its layout, so this renders once for the page and
+ * once for the `@modal` slot, side by side. The second copy hides itself (and leaves the accessibility tree).
+ */
 export default function ListTasksLoading() {
   return (
-    <div role="status" className="grid gap-6">
+    <div role="status" data-slot="list-tasks-loading" className="grid gap-6 [[data-slot=list-tasks-loading]~&]:hidden">
       <span className="sr-only">Loading tasks…</span>
       <div aria-hidden className="grid gap-4">
         <Skeleton className="h-4 w-40" />

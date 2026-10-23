@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-imports -- the contracts import allowlist (eslint.config.mjs) also covers tests; vitest is test-only
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import { createListSchema, deleteListSchema, listNameSchema, renameListSchema } from "./lists";

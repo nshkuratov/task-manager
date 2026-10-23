@@ -23,10 +23,15 @@ const SHARED_BAN = {
   regex: "^(@/server|@/app|drizzle-orm|@libsql|server-only)(/|$)",
   message: "Components, contracts, domain, lib and stories get data as props; only src/server touches the DB.",
 };
+const CONTRACTS_ALLOWLIST = "zod$|zod/|@/contracts(/|$)|\\.";
 const REPOSITORY_ONLY = "Reach data through @/server/repositories; only the repository layer touches Drizzle/libSQL.";
 
 function restrictImports(...patterns) {
   return { "no-restricted-imports": ["error", { patterns }] };
+}
+
+function contractsOnly(message, extra = []) {
+  return { regex: `^(?!${[...extra, CONTRACTS_ALLOWLIST].join("|")})`, message };
 }
 
 // One zone list for every block that sets the rule: a later block replaces the options of an earlier one.
@@ -103,10 +108,14 @@ export function createConfig({ root, typeAware }) {
     },
     {
       files: dirGlobs(["src/contracts"]),
-      rules: restrictImports(SHARED_BAN, {
-        regex: "^(?!zod$|zod/|@/contracts(/|$)|\\.)",
-        message: "Contracts may import only zod and other contracts.",
-      }),
+      rules: restrictImports(SHARED_BAN, contractsOnly("Contracts may import only zod and other contracts.")),
+    },
+    {
+      files: dirGlobs(["src/contracts"], "/*.test.ts"),
+      rules: restrictImports(
+        SHARED_BAN,
+        contractsOnly("Contracts tests may import only zod, other contracts and vitest.", ["vitest$"]),
+      ),
     },
     {
       files: dirGlobs(["src/domain"]),

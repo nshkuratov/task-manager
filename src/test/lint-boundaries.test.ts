@@ -37,6 +37,18 @@ const violations: Case[] = [
   { file: "src/domain/x.ts", code: "export const t = Date.now();", rules: [RESTRICTED_SYNTAX] },
   { file: "src/domain/x.ts", code: "export const t = new Date();", rules: [RESTRICTED_SYNTAX] },
   { file: "src/contracts/x.ts", code: 'import { useState } from "react";', rules: [RESTRICTED_IMPORTS] },
+  { file: "src/contracts/x.ts", code: 'import { it } from "vitest";', rules: [RESTRICTED_IMPORTS] },
+  { file: "src/contracts/x.test.ts", code: 'import { useState } from "react";', rules: [RESTRICTED_IMPORTS] },
+  {
+    file: "src/contracts/x.test.ts",
+    code: 'import { defineConfig } from "vitest/config";',
+    rules: [RESTRICTED_IMPORTS],
+  },
+  {
+    file: "src/contracts/x.test.ts",
+    code: 'import { db } from "@/server/db/client";',
+    rules: [RESTRICTED_IMPORTS, RESTRICTED_PATHS],
+  },
   { file: "src/app/x/page.tsx", code: 'import { sql } from "drizzle-orm";', rules: [RESTRICTED_IMPORTS] },
   {
     file: "src/app/x/page.tsx",
@@ -91,6 +103,7 @@ const allowed: Case[] = [
   { file: "src/server/actions/x.test.ts", code: 'import { createTestDb } from "../db/testing";', rules: [] },
   { file: "src/app/x/page.tsx", code: 'import { getRepositories } from "@/server/repositories";', rules: [] },
   { file: "src/app/x/page.tsx", code: 'import { getSession } from "@/server/auth/session";', rules: [] },
+  { file: "src/contracts/x.test.ts", code: 'import { it } from "vitest";', rules: [] },
 ];
 
 const BOUNDARY_RULES: ReadonlySet<string> = new Set([RESTRICTED_IMPORTS, RESTRICTED_PATHS, RESTRICTED_SYNTAX]);

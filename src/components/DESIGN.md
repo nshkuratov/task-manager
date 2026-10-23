@@ -76,7 +76,7 @@ Internal terms never reach the screen:
 | `due-soon` | Due within 48 hours |
 | `overdue` | Overdue (as a status-like label) / "N overdue" (list-card indicator) |
 | `deadline: null` | No deadline |
-| `progress` | "N% done (d of t)", N = `Math.floor(progress × 100)`; an empty list reads "0% done (0 of 0)" |
+| `progress` | "N% done (d of t)", N = `floor(done × 100 / total)` on the integer counts (`docs/list-tasks.md` §Progress percent from integer counts); an empty list reads "0% done (0 of 0)" |
 | `high` / `medium` / `low` | High / Medium / Low |
 
 ## Shared components

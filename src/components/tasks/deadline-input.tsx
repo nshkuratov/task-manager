@@ -26,6 +26,10 @@ interface Parts {
 
 const EMPTY: Parts = { date: "", time: "" };
 
+// Tab reaches the calendar/clock button inside the input's shadow root, where the input stops matching
+// :focus-visible; :focus-within keeps the app's ring on the field while that button has focus.
+const PICKER_FOCUS = "w-auto focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring";
+
 function partsOf(value: string | null | undefined, timeZone: string): Parts {
   if (value === null || value === undefined || value === "") return EMPTY;
   const instant = new Date(value);
@@ -83,7 +87,7 @@ export function DeadlineInput({ value, onChange, onBlur, ref, timeZone, error, r
             ref={ref}
             id={dateId}
             type="date"
-            className="w-auto"
+            className={PICKER_FOCUS}
             value={parts.date}
             readOnly={readOnly}
             aria-invalid={error ? true : undefined}
@@ -101,7 +105,7 @@ export function DeadlineInput({ value, onChange, onBlur, ref, timeZone, error, r
           <Input
             id={timeId}
             type="time"
-            className="w-auto"
+            className={PICKER_FOCUS}
             value={parts.time}
             readOnly={readOnly}
             disabled={parts.date === ""}

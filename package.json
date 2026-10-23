@@ -18,7 +18,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "check": "npm run -s typecheck && npm run -s lint && npm run -s format:check && npm run -s test",
-    "check:full": "npm run -s check && npm run -s test:storybook && npm run -s build",
+    "check:full": "npm run -s check && npm run -s test:storybook && npm run -s build && npm run -s test:e2e",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --conditions=react-server src/server/db/cli/migrate.ts",
     "db:seed": "tsx --conditions=react-server src/server/db/cli/seed.ts",

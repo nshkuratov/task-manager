@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,6 +23,17 @@ function useCloseModal() {
 }
 
 /**
+ * The element that had focus when a modal frame mounted outside any dialog: the task link that opened it. Module
+ * scope, so the card that replaces its own loading skeleton still knows the link, not the skeleton's button.
+ */
+let modalOpener: HTMLElement | null = null;
+/**
+ * True between a frame's unmount and the end of that React commit. A frame mounting meanwhile is the card
+ * replacing its skeleton: the skeleton's focused button is already detached, so focus reads as `<body>`.
+ */
+let replacingFrame = false;
+
+/**
  * Always open: it disappears when `router.back()` changes the route and the slot stops rendering it, so there is
  * no local closed state to fall out of sync with the URL.
  */
@@ -39,9 +50,34 @@ function ModalFrame({
   children?: ReactNode;
   titleClassName?: string;
 }) {
+  // Before Radix moves focus into the dialog (a passive effect), the opener still has it.
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    const inDialog = active instanceof HTMLElement && active.closest('[role="dialog"]') !== null;
+    if (!replacingFrame && !inDialog) {
+      // Nothing focused (Safari does not focus a clicked link): forget the last opener rather than return to it.
+      modalOpener = active instanceof HTMLElement && active !== document.body ? active : null;
+    }
+    return () => {
+      replacingFrame = true;
+      queueMicrotask(() => {
+        replacingFrame = false;
+      });
+    };
+  }, []);
+
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
+        // A modal Radix dialog returns focus only to its Trigger; opened by a route, it has none, and focus would
+        // drop to <body>. A link removed meanwhile (the task was deleted) keeps that default.
+        onCloseAutoFocus={(event) => {
+          if (modalOpener?.isConnected !== true) return;
+          event.preventDefault();
+          modalOpener.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className={titleClassName ?? "pr-6 text-xl leading-tight break-words"}>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
