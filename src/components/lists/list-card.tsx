@@ -1,12 +1,12 @@
 import { cn } from "cn";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import type { ListCounters, ListSummary } from "@/contracts/task";
+import { percentDone, progressText } from "@/lib/progress-text";
 import { listLinkId } from "./focus";
 import { ListCardMenu } from "./list-card-menu";
 import { ListIndicator } from "./list-indicator";
-import { ListProgress } from "./list-progress";
-import { percentDone, progressLabel } from "./progress-label";
 import type { DeleteListAction, RenameListAction } from "./types";
 
 const COUNTERS: ReadonlyArray<[keyof Omit<ListCounters, "total">, string]> = [
@@ -34,7 +34,7 @@ export interface ListCardProps {
  * overlay and outside the link, so it stays a separate tab stop and click target.
  */
 export function ListCard({ summary: { list, counters, indicator }, renameList, deleteList, query }: ListCardProps) {
-  const label = progressLabel(counters);
+  const label = progressText(counters);
 
   return (
     <Card className={cn("relative h-full gap-4 border-l-4 py-5 transition-shadow hover:shadow-md", ACCENT[indicator])}>
@@ -73,7 +73,12 @@ export function ListCard({ summary: { list, counters, indicator }, renameList, d
       </dl>
 
       <div className="mt-auto grid gap-1.5 px-5">
-        <ListProgress value={percentDone(counters)} label={`Progress of “${list.name}”`} valueText={label} />
+        <Progress
+          value={percentDone(counters)}
+          max={100}
+          aria-label={`Progress of “${list.name}”`}
+          aria-valuetext={label}
+        />
         {/* The progressbar announces the same text; this copy is for sighted readers. */}
         <p aria-hidden className="text-xs text-muted-foreground">
           {label}
