@@ -1,11 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
 import { useEffect, useId, useState, useTransition, type Ref } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FormField } from "@/components/common/form-field";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/common/pending-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -235,26 +234,15 @@ export function TaskForm({
       />
 
       <div className="flex justify-end">
-        <Button
+        <PendingButton
           type="submit"
-          // aria-disabled, not disabled: disabling the focused button would drop focus to <body>.
+          pending={pending}
+          pendingLabel={labels.pending}
           aria-disabled={blocked || undefined}
-          aria-busy={pending || undefined}
-          className="aria-disabled:opacity-50"
         >
-          {pending ? (
-            <>
-              <Loader2Icon aria-hidden className="animate-spin" />
-              {labels.pending}
-            </>
-          ) : (
-            labels.idle
-          )}
-        </Button>
+          {labels.idle}
+        </PendingButton>
       </div>
-      <p role="status" className="sr-only">
-        {pending ? labels.pending : ""}
-      </p>
     </form>
   );
 }

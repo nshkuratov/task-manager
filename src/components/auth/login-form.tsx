@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { FormField } from "@/components/common/form-field";
+import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,25 +116,9 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
         ) : null}
       </div>
 
-      <Button
-        type="submit"
-        // aria-disabled, not disabled: disabling the focused button would drop focus to <body>.
-        aria-disabled={pending || undefined}
-        aria-busy={pending || undefined}
-        className="w-full aria-disabled:opacity-50"
-      >
-        {pending ? (
-          <>
-            <Loader2Icon aria-hidden className="animate-spin" />
-            Signing in…
-          </>
-        ) : (
-          "Sign in"
-        )}
-      </Button>
-      <p role="status" className="sr-only">
-        {pending ? "Signing in…" : ""}
-      </p>
+      <PendingButton type="submit" pending={pending} pendingLabel="Signing in…" className="w-full">
+        Sign in
+      </PendingButton>
     </form>
   );
 }

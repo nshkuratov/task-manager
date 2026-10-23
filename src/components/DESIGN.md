@@ -56,7 +56,7 @@ Every data view provides these states, in these words:
 | No results | Names the query or filter that matched nothing + a "Clear" action |
 | Error | `error.tsx` with a plain explanation and a "Try again" action |
 | Not found | `not-found.tsx` with a way back |
-| Pending | The trigger shows a spinner and a verb in progress ("Deleting…"), is inert (`aria-disabled` when it holds focus, so focus stays put), and the verb is announced through a `role="status"` region |
+| Pending | A button trigger is a `PendingButton`: it shows a spinner and a verb in progress ("Deleting…") in place of its label and icon; it is inert but keeps focus (`aria-disabled`, never native `disabled`) and is marked `aria-busy`; a click or implicit submit while pending does nothing; and the verb is announced through an always-mounted `sr-only` `role="status"` region beside the button |
 | Done / failed | A toast (sonner, announced via `aria-live`) |
 
 Destructive actions go through `ConfirmDialog`, whose title names what is lost ("Delete “Groceries” and

@@ -114,6 +114,21 @@ export const ControlledPendingBlocksClose: Story = {
   },
 };
 
+export const ControlledPendingClickKeepsOpen: Story = {
+  name: "Controlled: a confirm click while pending is ignored and requests no close",
+  args: { ...controlled, onConfirm: fn(never) },
+  play: async ({ args }) => {
+    const dialog = await page().findByRole("alertdialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete list" }));
+    const confirm = await within(dialog).findByRole("button", { name: "Deleting…" });
+    await expect(confirm).toHaveAttribute("aria-busy", "true");
+    await userEvent.click(confirm);
+    await expect(args.onConfirm).toHaveBeenCalledOnce();
+    await expect(args.onOpenChange).not.toHaveBeenCalled();
+    await expect(page().getByRole("alertdialog")).toBeInTheDocument();
+  },
+};
+
 class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   override state = { failed: false };
   static getDerivedStateFromError() {

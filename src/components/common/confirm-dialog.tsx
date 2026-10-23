@@ -1,10 +1,8 @@
 "use client";
 
-import { Loader2Icon } from "lucide-react";
 import { useState, type ReactElement, type ReactNode } from "react";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -13,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PendingButton } from "./pending-button";
 
 type ConfirmResult = void | boolean;
 
@@ -96,30 +95,16 @@ export function ConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction
+          <PendingButton
+            type="button"
             variant={destructive ? "destructive" : "default"}
-            // aria-disabled, not disabled: disabling the focused button would drop focus out of the dialog.
-            aria-disabled={pending || undefined}
-            className="aria-disabled:opacity-50"
-            onClick={(event) => {
-              // Action is a Radix Close button; keep the dialog open until onConfirm settles.
-              event.preventDefault();
-              if (!pending) void confirm();
-            }}
+            pending={pending}
+            pendingLabel={pendingLabel}
+            onClick={() => void confirm()}
           >
-            {pending ? (
-              <>
-                <Loader2Icon aria-hidden className="animate-spin" />
-                {pendingLabel}
-              </>
-            ) : (
-              confirmLabel
-            )}
-          </AlertDialogAction>
+            {confirmLabel}
+          </PendingButton>
         </AlertDialogFooter>
-        <p role="status" className="sr-only">
-          {pending ? pendingLabel : ""}
-        </p>
       </AlertDialogContent>
     </AlertDialog>
   );

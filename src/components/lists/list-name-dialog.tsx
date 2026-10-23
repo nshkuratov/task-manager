@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
 import {
   useRef,
   useState,
@@ -12,7 +11,7 @@ import {
 } from "react";
 import { useForm } from "react-hook-form";
 import { FormField } from "@/components/common/form-field";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/common/pending-button";
 import {
   Dialog,
   DialogContent,
@@ -210,26 +209,10 @@ function ListNameForm({
         />
       </FormField>
       <DialogFooter>
-        <Button
-          type="submit"
-          // aria-disabled, not disabled: disabling the focused button would drop focus out of the dialog.
-          aria-disabled={pending || undefined}
-          aria-busy={pending || undefined}
-          className="aria-disabled:opacity-50"
-        >
-          {pending ? (
-            <>
-              <Loader2Icon aria-hidden className="animate-spin" />
-              {pendingLabel}
-            </>
-          ) : (
-            submitLabel
-          )}
-        </Button>
+        <PendingButton type="submit" pending={pending} pendingLabel={pendingLabel}>
+          {submitLabel}
+        </PendingButton>
       </DialogFooter>
-      <p role="status" className="sr-only">
-        {pending ? pendingLabel : ""}
-      </p>
     </form>
   );
 }

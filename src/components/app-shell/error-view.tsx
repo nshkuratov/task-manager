@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2Icon, RotateCwIcon, TriangleAlertIcon } from "lucide-react";
+import { RotateCwIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
+import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 
 export interface ErrorViewProps {
@@ -26,27 +27,20 @@ export function ErrorView({ onRetry, digest }: ErrorViewProps) {
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        <Button
+        <PendingButton
           type="button"
-          aria-disabled={pending || undefined}
-          aria-busy={pending || undefined}
-          className="aria-disabled:opacity-50"
-          onClick={() => {
-            if (pending) return;
-            startTransition(onRetry);
-          }}
+          pending={pending}
+          pendingLabel="Trying again…"
+          idleIcon={<RotateCwIcon aria-hidden />}
+          onClick={() => startTransition(onRetry)}
         >
-          {pending ? <Loader2Icon aria-hidden className="animate-spin" /> : <RotateCwIcon aria-hidden />}
-          {pending ? "Trying again…" : "Try again"}
-        </Button>
+          Try again
+        </PendingButton>
         <Button asChild variant="outline">
           <Link href="/lists">Back to lists</Link>
         </Button>
       </div>
       {digest ? <p className="font-mono text-xs text-muted-foreground">Reference: {digest}</p> : null}
-      <span role="status" className="sr-only">
-        {pending ? "Trying again…" : ""}
-      </span>
     </div>
   );
 }
