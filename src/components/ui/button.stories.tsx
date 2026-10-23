@@ -20,6 +20,23 @@ export const Disabled: Story = {
   },
 };
 
+export const Dark: Story = {
+  globals: { theme: "dark" },
+  render: (args) => (
+    <div className="flex flex-wrap gap-2">
+      {(["default", "destructive", "outline", "secondary", "ghost", "link"] as const).map((variant) => (
+        <Button key={variant} {...args} variant={variant}>
+          {variant}
+        </Button>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(document.documentElement).toHaveClass("dark");
+    await expect(within(canvasElement).getAllByRole("button")).toHaveLength(6);
+  },
+};
+
 export const ClickCallsHandler: Story = {
   name: "Click calls the handler",
   play: async ({ args, canvasElement }) => {

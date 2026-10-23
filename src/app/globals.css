@@ -1,9 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -19,9 +21,20 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-status-new: var(--status-new);
+  --color-status-new-foreground: var(--status-new-foreground);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-in-progress-foreground: var(--status-in-progress-foreground);
+  --color-status-done: var(--status-done);
+  --color-status-done-foreground: var(--status-done-foreground);
+  --color-indicator-overdue: var(--indicator-overdue);
+  --color-indicator-overdue-foreground: var(--indicator-overdue-foreground);
+  --color-indicator-due-soon: var(--indicator-due-soon);
+  --color-indicator-due-soon-foreground: var(--indicator-due-soon-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -41,13 +54,24 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.54 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.52 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --input: oklch(0.62 0 0);
+  --ring: oklch(0.556 0 0);
+  --status-new: oklch(0.932 0.032 255.585);
+  --status-new-foreground: oklch(0.424 0.199 265.638);
+  --status-in-progress: oklch(0.943 0.029 294.588);
+  --status-in-progress-foreground: oklch(0.432 0.232 292.759);
+  --status-done: oklch(0.95 0.052 163.051);
+  --status-done-foreground: oklch(0.432 0.095 166.913);
+  --indicator-overdue: oklch(0.936 0.032 17.717);
+  --indicator-overdue-foreground: oklch(0.444 0.177 26.899);
+  --indicator-due-soon: oklch(0.973 0.071 103.193);
+  --indicator-due-soon-foreground: oklch(0.476 0.114 61.907);
 }
 
 .dark {
@@ -66,16 +90,44 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.145 0 0);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --input: oklch(0.556 0 0);
+  --ring: oklch(0.708 0 0);
+  --status-new: oklch(0.282 0.091 267.935);
+  --status-new-foreground: oklch(0.882 0.059 254.128);
+  --status-in-progress: oklch(0.283 0.141 291.089);
+  --status-in-progress-foreground: oklch(0.894 0.057 293.283);
+  --status-done: oklch(0.262 0.051 172.552);
+  --status-done-foreground: oklch(0.905 0.093 164.15);
+  --indicator-overdue: oklch(0.258 0.092 26.042);
+  --indicator-overdue-foreground: oklch(0.885 0.062 18.334);
+  --indicator-due-soon: oklch(0.286 0.066 53.813);
+  --indicator-due-soon-foreground: oklch(0.945 0.129 101.54);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

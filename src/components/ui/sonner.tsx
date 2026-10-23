@@ -3,18 +3,14 @@
 import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
-
-type Theme = NonNullable<ToasterProps["theme"]>;
-
-const isTheme = (value: string | undefined): value is Theme =>
-  value === "light" || value === "dark" || value === "system";
+import { isThemeOption } from "@/components/theme/theme-options";
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme } = useTheme();
 
   return (
     <Sonner
-      theme={isTheme(theme) ? theme : "system"}
+      theme={isThemeOption(theme) ? theme : "system"}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
