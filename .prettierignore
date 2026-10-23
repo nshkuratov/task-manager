@@ -1,0 +1,27 @@
+# Prettier formats code only: the same set scripts/ci/is-code-change.sh calls code. Everything is ignored,
+# then the code roots are re-included, so a non-code file added later (vercel.json, a workflow, public/)
+# can never fail a code PR's format check. Keep this list in step with CODE_RE in that script.
+/*
+!/src/
+!/.storybook/
+!/drizzle/
+!/tests/
+!/e2e/
+!/package.json
+!/tsconfig*.json
+!/next.config.*
+!/eslint.config.*
+!/.prettierrc*
+!/prettier.config.*
+!/vitest*.ts
+!/vitest*.mts
+!/vitest*.js
+!/vitest*.mjs
+!/playwright.config.*
+!/postcss.config.*
+!/tailwind.config.*
+!/drizzle.config.*
+!/components.json
+
+*.md
+/drizzle/meta/

@@ -1,0 +1,38 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+
+# Dependencies & build output
+node_modules/
+.next/
+out/
+build/
+coverage/
+storybook-static/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local data (SQLite) & env
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env*
+!.env.example
+
+# Test artifacts
+test-results/
+playwright-report/
+.vitest-attachments/
+
+# AI-agent workspace (docs, orchestration, instructions) — local only
+.claude/
+.orchestration/
+CLAUDE.md
+docs/
+scripts/
