@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { sql } from "drizzle-orm";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { openDb } from "@/server/db/client";
 import { runMigrations } from "@/server/db/migrate";
-import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
+import { createTestDb, insertTestUser, removeDirWhenUnlocked, type TestDb } from "@/server/db/testing";
 
 const open: TestDb[] = [];
 async function testDb(): Promise<TestDb> {
@@ -46,7 +46,7 @@ describe("migrations", () => {
       expect(await runMigrations(db)).toBe(0);
     } finally {
       client.close();
-      await rm(dir, { recursive: true, force: true });
+      void removeDirWhenUnlocked(dir);
     }
   });
 
@@ -91,7 +91,13 @@ describe("createTestDb", () => {
 
     await first.cleanup();
     await second.cleanup();
-    expect(existsSync(first.path)).toBe(false);
-    expect(existsSync(second.path)).toBe(false);
-  });
+    // Removal is asynchronous on Windows (the file lock clears seconds after close), so poll for it.
+    await vi.waitFor(
+      () => {
+        expect(existsSync(first.path)).toBe(false);
+        expect(existsSync(second.path)).toBe(false);
+      },
+      { timeout: 30_000, interval: 250 },
+    );
+  }, 35_000);
 });

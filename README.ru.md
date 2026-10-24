@@ -12,9 +12,9 @@ TypeScript, Tailwind CSS с shadcn/ui и базе данных SQLite (libSQL) �
 
 Репозиторий: [GitHub](https://github.com/nshkuratov/task-manager).
 
-**Демо-стенд:** ещё не опубликован. Перед сдачей по ТЗ необходимо добавить адрес опубликованного приложения.
+**Демо-стенд:** [task-manager-nine-dun-23.vercel.app](https://task-manager-nine-dun-23.vercel.app/).
 
-Вход после заполнения базы: **admin@example.com** / **Admin123!**.
+Вход после заполнения базы: **admin@example.com** / **Admin123!**
 
 ## Быстрый старт
 
@@ -162,4 +162,4 @@ Next.js App Router выполняет чтение и запись на серв
 
 В репозитории есть [vercel.json](vercel.json) для Vercel с размещённой базой libSQL, например Turso. В окружении Production проекта хостинга задайте `DATABASE_URL`, `DATABASE_AUTH_TOKEN` и случайный `SESSION_SECRET`. Настроенная команда сборки применяет миграции, заполняет базу и собирает Next.js. Конфигурация пропускает развёртывания вне production. Учётные данные базы и локальные файлы `.env` не должны попадать в Git.
 
-Демо ещё не опубликовано. После развёртывания добавьте публичный URL в начало обоих README и проверьте вход и сохранение данных после перезагрузки страницы.
+Демо опубликовано: [task-manager-nine-dun-23.vercel.app](https://task-manager-nine-dun-23.vercel.app/). При повторном развёртывании проверьте вход и сохранение данных после перезагрузки страницы.

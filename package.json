@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --project unit --reporter=dot",
-    "test:storybook": "vitest run --project storybook --reporter=dot",
+    "test:storybook": "node scripts/ci/patch-storybook-addon.mjs && vitest run --project storybook --reporter=dot",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "check": "npm run -s typecheck && npm run -s lint && npm run -s format:check && npm run -s test",

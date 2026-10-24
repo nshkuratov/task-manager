@@ -20,9 +20,11 @@ const NOW = new Date("2026-10-22T10:00:00Z");
 
 async function seedWithCli(dbPath: string): Promise<string> {
   const root = path.resolve(import.meta.dirname, "../../..");
+  // Run the tsx entry point through Node itself: the node_modules/.bin/tsx shim is a POSIX shell
+  // script (tsx.cmd on Windows) and cannot be execFile'd directly.
   const { stdout } = await promisify(execFile)(
-    path.join(root, "node_modules/.bin/tsx"),
-    ["--conditions=react-server", "src/server/db/cli/seed.ts"],
+    process.execPath,
+    [path.join(root, "node_modules/tsx/dist/cli.mjs"), "--conditions=react-server", "src/server/db/cli/seed.ts"],
     { cwd: root, env: { ...process.env, DATABASE_URL: `file:${dbPath}`, VERCEL: "", DATABASE_AUTH_TOKEN: "" } },
   );
   return stdout.trim();

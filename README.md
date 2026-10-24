@@ -11,9 +11,9 @@ system theme. Built with Next.js (App Router), TypeScript, Tailwind CSS with sha
 
 Repository: [GitHub](https://github.com/nshkuratov/task-manager).
 
-**Live demo:** not published yet. Add the deployed application URL before submitting the assignment.
+**Live demo:** [task-manager-nine-dun-23.vercel.app](https://task-manager-nine-dun-23.vercel.app/).
 
-Sign in after seeding the database: **admin@example.com** / **Admin123!**.
+Sign in after seeding the database: **admin@example.com** / **Admin123!**
 
 ## Quick start
 
@@ -159,4 +159,4 @@ Next.js App Router keeps reads and writes on the server through RSC and Server A
 
 The repository includes [vercel.json](vercel.json) for Vercel with a hosted libSQL database such as Turso. Configure `DATABASE_URL`, `DATABASE_AUTH_TOKEN` and a random `SESSION_SECRET` in the hosting project's Production environment. The configured build runs migrations, seeds the database, then builds Next.js. Non-production deployments are skipped by the configuration. Keep database credentials and local `.env` files out of Git.
 
-The demo has not been published yet. Once it is deployed, add its public URL at the top of both README files and verify sign-in and persistence after a reload.
+The demo is published at [task-manager-nine-dun-23.vercel.app](https://task-manager-nine-dun-23.vercel.app/). When redeploying, verify sign-in and persistence after a reload.

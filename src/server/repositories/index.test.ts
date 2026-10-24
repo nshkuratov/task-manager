@@ -1,7 +1,8 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { removeDirWhenUnlocked } from "@/server/db/testing";
 
 let dir: string;
 
@@ -9,9 +10,10 @@ beforeEach(async () => {
   dir = await mkdtemp(path.join(os.tmpdir(), "task-manager-repos-"));
   vi.resetModules();
 });
-afterEach(async () => {
+afterEach(() => {
   vi.unstubAllEnvs();
-  await rm(dir, { recursive: true, force: true });
+  // The client opened through getDb() has no close handle here; removal rides out the Windows lock.
+  void removeDirWhenUnlocked(dir);
 });
 
 describe("getRepositories", () => {

@@ -7,8 +7,8 @@ describe("fileDbPath", () => {
   it.each([
     ["file:./data/app.db", path.resolve("data/app.db")],
     ["file:data/app.db", path.resolve("data/app.db")],
-    ["file:/tmp/app.db", "/tmp/app.db"],
-    ["file:///tmp/app.db", "/tmp/app.db"],
+    ["file:/tmp/app.db", path.resolve("/tmp/app.db")],
+    ["file:///tmp/app.db", path.resolve("/tmp/app.db")],
     ["file:./data/app.db?mode=ro", path.resolve("data/app.db")],
   ])("maps %s to a filesystem path", (url, expected) => {
     expect(fileDbPath(url)).toBe(expected);
