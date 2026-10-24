@@ -18,7 +18,7 @@ export function FormField({
 }: {
   label: ReactNode;
   description?: ReactNode;
-  error?: string;
+  error?: string | undefined;
   id?: string;
   className?: string;
   children: ReactElement;
@@ -44,11 +44,25 @@ export function FormField({
           {description}
         </p>
       ) : null}
-      {error ? (
-        <p id={errorId} role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <FieldError id={errorId} message={error} />
     </div>
   );
+}
+
+/** A field's announced error; the control points at `id` via `aria-describedby`. Renders nothing without one. */
+export function FieldError({ id, message }: { id: string; message: string | undefined }) {
+  return message ? (
+    <p id={id} role="alert" className="text-sm text-destructive">
+      {message}
+    </p>
+  ) : null;
+}
+
+/** The form-level error above the fields: what no single input can show. Renders nothing without one. */
+export function FormErrorBanner({ message }: { message: string | null }) {
+  return message !== null ? (
+    <div role="alert" className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive">
+      {message}
+    </div>
+  ) : null;
 }

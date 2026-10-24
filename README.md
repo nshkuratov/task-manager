@@ -9,14 +9,11 @@ edit, delete, status change and a status filter. Each task opens as a card. Ther
 system theme. Built with Next.js (App Router), TypeScript, Tailwind CSS with shadcn/ui, and a SQLite
 (libSQL) database behind a server-side data layer.
 
-**Live demo: TBD (filled in by the owner after provisioning, see [docs/deployment/deploy-guide.md](docs/deployment/deploy-guide.md))**
-— sign in with **admin@example.com** / **Admin123!**
+Repository: [GitHub](https://github.com/nshkuratov/task-manager).
 
-| | Light | Dark |
-| --- | --- | --- |
-| Lists | ![Lists page, light theme](docs/assets/lists-light.png) | ![Lists page, dark theme](docs/assets/lists-dark.png) |
-| Tasks | ![Task table of a list, light theme](docs/assets/tasks-light.png) | ![Task table of a list, dark theme](docs/assets/tasks-dark.png) |
-| Card | ![Task card, light theme](docs/assets/card-light.png) | ![Task card, dark theme](docs/assets/card-dark.png) |
+**Live demo:** not published yet. Add the deployed application URL before submitting the assignment.
+
+Sign in after seeding the database: **admin@example.com** / **Admin123!**.
 
 ## Quick start
 
@@ -29,9 +26,25 @@ npm run db:migrate && npm run db:seed
 npm run dev
 ```
 
-Open <http://localhost:3000>, sign in with **admin@example.com** / **Admin123!**, and you land on your
-lists. The data lives in `data/app.db` and survives restarts. More detail, every script, and
-troubleshooting: [docs/development/development-guide.md](docs/development/development-guide.md).
+Open <http://localhost:3000> and sign in with the credentials above. Data is stored in `data/app.db` and survives restarts. In PowerShell, `Copy-Item .env.example .env` can replace `cp .env.example .env`; run migration and seed commands on separate lines if the shell does not support `&&`.
+
+### Environment and database
+
+All variables are documented in [.env.example](.env.example).
+
+| Variable | Local development | Production |
+| --- | --- | --- |
+| `DATABASE_URL` | Defaults to `file:./data/app.db` | Vercel requires a hosted `libsql://…` URL; local files are refused |
+| `DATABASE_AUTH_TOKEN` | Not needed for a file | Required for `libsql://` |
+| `SESSION_SECRET` | A development-only fallback is available | Required, at least 32 characters, including local `npm run start` |
+
+`npm run db:migrate` applies migrations from `drizzle/`; `npm run db:seed` creates the demo user and lists. Repeated seeding does not duplicate existing lists, but restores them if the demo user has no lists left. `npm run db:reset` deletes the local database and recreates it with demo data; remote databases are refused. After schema changes, `npm run db:generate` creates a migration.
+
+For production, set `SESSION_SECRET` in `.env`, then run `npm run build` and `npm run start`. Generate a random value with:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(48).toString('base64'))"
+```
 
 ## How the data layer works
 
@@ -79,13 +92,10 @@ flowchart LR
   migrations runner, seed), `src/domain` (pure rules), `src/contracts` (types and zod schemas). ESLint
   enforces the boundaries on resolved file paths, so `npm run lint` fails if a component reaches the
   database.
-- **Durability.** Locally the database is a SQLite file (`file:./data/app.db`). The live demo uses the same
+- **Durability.** Locally the database is a SQLite file (`file:./data/app.db`). The deployment configuration supports the same
   code against a hosted libSQL database on Turso, because a serverless host's filesystem is ephemeral.
   The app refuses a `file:` database on Vercel rather than lose writes. Schema changes are committed
   Drizzle migrations; the seed is idempotent.
-
-Rationale and rejected alternatives: [docs/architecture/architecture.md](docs/architecture/architecture.md) and
-[docs/architecture/data-layer.md](docs/architecture/data-layer.md).
 
 ## Tests
 
@@ -97,16 +107,22 @@ npm run build && npm run test:e2e # Playwright end-to-end tests against the prod
 npm run check:full                # all of the above + typecheck, lint, format check, build
 ```
 
-| Suite | What it proves | Size (measured 2026-10-23) |
-| --- | --- | --- |
-| Unit (`npm test`) | Domain rules at fixed instants, incl. property-based tests; zod schemas; repositories and queries on a real temp SQLite file; auth and `defineAction`; import boundaries | 577 test cases in 50 files |
-| Sorting and list counters (part of unit) | The spec's sort order and the new / in progress / done / overdue counters | 25 tests (`it` / `it.each` declarations in `sort.test.ts` and `counters.test.ts`; the spec asks for at least 8) |
-| Storybook (`npm run test:storybook`) | Components as a user operates them: login submit and validation, status change, filters, dialogs, card save; axe in both themes | 156 story tests; 155 `play` functions (the spec asks for at least 5) |
-| End to end (`npm run test:e2e`) | Sign-in guard, the golden path surviving a full reload, theme persistence without a flash, search and filter, modal vs. standalone card, keyboard-only use, responsive layout, axe on every page | 33 tests in 8 files |
+Unit tests cover domain rules, zod schemas, repositories and queries on temporary SQLite databases, authentication and import boundaries. Storybook tests exercise user interactions and axe accessibility checks in both themes. E2E tests cover the full application, including persistence after a reload.
 
-The commands that print each number are in
-[docs/testing/testing-guide.md](docs/testing/testing-guide.md#counting-the-tests); re-run them for current numbers. How to run single files, the e2e port, and screenshot regeneration:
-[docs/testing/testing-guide.md](docs/testing/testing-guide.md).
+The assignment-specific tests are available directly in the repository:
+
+- [Sorting](src/domain/sort.test.ts) and [counters](src/domain/counters.test.ts): 25 test declarations covering the required rules (the assignment requires at least 8 tests).
+- [Login form](src/components/auth/login-form.stories.tsx) and [status changes](src/components/tasks/status-select.stories.tsx): more than 5 stories with `play`, including form submission, validation, loading and errors. The installed Storybook 10 imports test utilities from `storybook/test`.
+
+```sh
+npx vitest run --project unit src/domain/sort.test.ts src/domain/counters.test.ts
+npm run storybook
+npm run build-storybook
+```
+
+Storybook opens at <http://localhost:6006>; its static build is saved to `storybook-static/`. `test:storybook` does not require a separately running Storybook server.
+
+E2E requires a fresh production build. Playwright starts the server on port 3210, sets a test session secret and recreates a separate `data/e2e.db` database. The port must be free. `npm run check` runs typecheck, lint, formatting checks and unit tests; `check:full` adds Storybook, build and E2E. CI is currently disabled, so run these commands locally to verify results. Test reports show current counts and pass/fail results.
 
 ## Project structure
 
@@ -121,29 +137,26 @@ src/
   styles/         Design tokens and the contrast test
 drizzle/          Committed SQL migrations
 e2e/              Playwright specs
-docs/             Requirements, decision records, guides, plans
-scripts/          Repository tooling (requirement tracing, CI helpers)
 ```
 
-## Design decisions
+## Features and domain rules
 
-The why behind the code lives in [docs/](docs/INDEX.md). Start with:
+- Login with email/password validation, pending state and error messages.
+- `/lists`: create, rename, delete and search lists; each card shows status counters, progress and urgency.
+- `/lists/[id]`: add, edit and delete tasks, change status and filter by status; the table shows title, status, priority and deadline.
+- `/tasks/[id]`: title, description, status, priority and deadline, with saving through Server Actions. The card opens as a modal when navigating from a list, or as a standalone page via a direct URL.
+- Light, dark and system themes.
 
-- [Architecture](docs/architecture/architecture.md): App Router over a SPA, the layers, libSQL over JSON or in-memory
-  storage, pure clock-injected domain rules, the UI kit, validation and test tooling, authentication.
-- [Domain rules](docs/architecture/domain-rules.md): what "overdue" and "due soon" mean exactly, the sort order and its
-  tie-breakers, counter semantics.
-- [Data layer](docs/architecture/data-layer.md), [Auth](docs/architecture/auth.md), [Design system](docs/design/design-system.md),
-  [Task editing and deadlines](docs/features/task-editing.md), [End-to-end test decisions](docs/testing/testing.md),
-  [UX and accessibility audit](docs/design/ux-audit.md), [Deployment](docs/deployment/deployment.md).
+Sorting is implemented in [sort.ts](src/domain/sort.ts): unfinished overdue tasks first, then other unfinished tasks, then completed tasks. Within each group, earlier deadlines come first, undated tasks come last, and equal deadlines are ordered by priority (`high`, `medium`, `low`), then title and id for deterministic ties.
 
-Visual design proposals, each with light and dark screenshots (not the shipped design):
-[DESIGNS.md](DESIGNS.md).
+A task is overdue only if it is unfinished and `deadline < now`. The yellow indicator means an unfinished task is due between `now` and `now + 48h`, inclusive; red takes precedence. Status counters sum to the total; overdue is an additional overlapping count. Progress is `done / total`, or zero for an empty list. Domain functions receive `now` explicitly, so boundary cases can be tested without depending on the system clock.
 
-## Spec coverage
+## Design choices
 
-[docs/spec/requirements.md](docs/spec/requirements.md) transcribes the assignment and gives every requirement an ID
-(`R-AUTH-1`, `R-SORT-2`, …). [docs/spec/traceability.md](docs/spec/traceability.md) maps each ID to the unit tests,
-stories and e2e specs that prove it. It is generated by `node scripts/docs/trace-requirements.mjs`, which
-fails if an AUTH, LIST, TASKS, CARD, THEME or SORT requirement has no test, story or spec naming it (the
-other groups are reported, not gated).
+Next.js App Router keeps reads and writes on the server through RSC and Server Actions. Drizzle with SQLite/libSQL provides persistent storage and committed SQL migrations without a separate API service. Pure domain functions keep sorting and counters independent of React. Shared zod schemas validate input both in forms and on the server; Tailwind CSS, shadcn/ui and Radix provide the visual and interaction primitives. Components accept data and actions as props, which also lets Storybook exercise them in isolation.
+
+## Deployment
+
+The repository includes [vercel.json](vercel.json) for Vercel with a hosted libSQL database such as Turso. Configure `DATABASE_URL`, `DATABASE_AUTH_TOKEN` and a random `SESSION_SECRET` in the hosting project's Production environment. The configured build runs migrations, seeds the database, then builds Next.js. Non-production deployments are skipped by the configuration. Keep database credentials and local `.env` files out of Git.
+
+The demo has not been published yet. Once it is deployed, add its public URL at the top of both README files and verify sign-in and persistence after a reload.

@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { FormField } from "@/components/common/form-field";
+import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
+import { FieldError, FormErrorBanner, FormField } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +35,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
     // `raw`: the action re-parses the same values with the same schema, so it must get them untransformed.
     resolver: zodResolver(loginSchema, undefined, { raw: true }),
     defaultValues: { email: "", password: "" },
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-    shouldFocusError: true,
+    ...ACTION_FORM_OPTIONS,
   });
 
   const submit = handleSubmit((values) => {
@@ -46,12 +45,10 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
       if (result === undefined || result.ok) return;
 
       resetField("password");
-      for (const field of FIELDS) {
-        const message = result.fieldErrors?.[field]?.[0];
-        if (message !== undefined) setError(field, { message });
-      }
-      if (result.formError !== undefined) setFormError(result.formError);
-      setFocus(result.fieldErrors?.email ? "email" : "password");
+      const { placed, banner } = splitActionErrors(result, FIELDS);
+      for (const [field, message] of placed) setError(field, { message });
+      setFormError(banner);
+      setFocus(placed[0]?.[0] ?? "password");
     });
   });
 
@@ -67,16 +64,9 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
         void submit(event);
       }}
     >
-      {formError !== null ? (
-        <div
-          role="alert"
-          className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive"
-        >
-          {formError}
-        </div>
-      ) : null}
+      <FormErrorBanner message={formError} />
 
-      <FormField label="Email" {...(errors.email?.message === undefined ? {} : { error: errors.email.message })}>
+      <FormField label="Email" error={errors.email?.message}>
         <Input type="email" autoComplete="username" inputMode="email" readOnly={pending} {...register("email")} />
       </FormField>
 
@@ -109,11 +99,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
             {showPassword ? <EyeOffIcon aria-hidden /> : <EyeIcon aria-hidden />}
           </Button>
         </div>
-        {errors.password ? (
-          <p id={passwordErrorId} role="alert" className="text-sm text-destructive">
-            {errors.password.message}
-          </p>
-        ) : null}
+        <FieldError id={passwordErrorId} message={errors.password?.message} />
       </div>
 
       <PendingButton type="submit" pending={pending} pendingLabel="Signing in…" className="w-full">

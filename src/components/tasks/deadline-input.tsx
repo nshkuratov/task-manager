@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type Ref } from "react";
+import { FieldError } from "@/components/common/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,11 +133,7 @@ export function DeadlineInput({ value, onChange, onBlur, ref, timeZone, error, r
       <p id={descriptionId} className="text-sm text-muted-foreground">
         Optional. Without a time, the deadline is {DEFAULT_DEADLINE_TIME}.
       </p>
-      {error ? (
-        <p id={errorId} role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <FieldError id={errorId} message={error} />
     </fieldset>
   );
 }

@@ -85,7 +85,11 @@ Internal terms never reach the screen:
 - `EmptyState` — decorative icon (`aria-hidden`), an `h2` title, a sentence and the primary action.
 - `FormField` — label, control, description, error. It injects `id`, `aria-invalid` and
   `aria-describedby` (description, then error) into its single child; the error has `role="alert"`.
-  Pass a custom `id` to `FormField`, never to the child.
+  Pass a custom `id` to `FormField`, never to the child. A field that cannot use the Slot (a Radix `Select`,
+  an input with a button beside it) wires its ARIA by hand and renders its message with `FieldError`.
+- `FormErrorBanner` — the form-level `role="alert"` message above the fields. Action-backed forms fill it
+  via `splitActionErrors` (`common/action-form.ts`): the first error per known field goes beside its input;
+  the form error plus any field error the form has no input for goes in the banner, so none is dropped.
 - `ConfirmDialog` — `AlertDialog` with a consequence sentence and a destructive confirm that shows a
   pending state; works with a `trigger` (focus returns to it) or controlled `open`/`onOpenChange`.
 - `ThemeToggle` — renders a stable, disabled placeholder until mounted so server and client markup match.

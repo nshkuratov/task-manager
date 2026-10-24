@@ -10,7 +10,8 @@ import {
   type TransitionStartFunction,
 } from "react";
 import { useForm } from "react-hook-form";
-import { FormField } from "@/components/common/form-field";
+import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
+import { FormErrorBanner, FormField } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import {
   Dialog,
@@ -154,9 +155,7 @@ function ListNameForm({
   } = useForm<CreateListInput, unknown, CreateListOutput>({
     resolver: zodResolver(createListSchema),
     defaultValues: { name: defaultName },
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-    shouldFocusError: true,
+    ...ACTION_FORM_OPTIONS,
   });
   const { ref: registerRef, ...nameField } = register("name");
 
@@ -170,34 +169,19 @@ function ListNameForm({
         onSuccess(result.data);
         return;
       }
-      const nameError = result.fieldErrors?.name?.[0];
-      if (nameError !== undefined) {
-        setError("name", { message: nameError });
-        setFocus("name");
+      const { placed, banner } = splitActionErrors(result, ["name"]);
+      for (const [field, message] of placed) {
+        setError(field, { message });
+        setFocus(field);
       }
-      const unplaced = Object.entries(result.fieldErrors ?? {})
-        .filter(([key]) => key !== "name")
-        .flatMap(([, messages]) => messages?.slice(0, 1) ?? []);
-      const message = [result.formError, ...unplaced].filter((part) => part !== undefined).join(" ");
-      if (message !== "") setFormError(message);
+      setFormError(banner);
     });
   });
 
   return (
     <form noValidate className="grid gap-5" onSubmit={(event) => void submit(event)}>
-      {formError !== null ? (
-        <div
-          role="alert"
-          className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive"
-        >
-          {formError}
-        </div>
-      ) : null}
-      <FormField
-        label="Name"
-        description="Up to 80 characters."
-        {...(errors.name?.message === undefined ? {} : { error: errors.name.message })}
-      >
+      <FormErrorBanner message={formError} />
+      <FormField label="Name" description="Up to 80 characters." error={errors.name?.message}>
         <Input
           autoComplete="off"
           readOnly={pending}

@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useId, useState, useTransition, type Ref } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { FormField } from "@/components/common/form-field";
+import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
+import { FieldError, FormErrorBanner, FormField } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,8 +35,6 @@ export interface TaskFormValues {
 }
 
 const FIELDS = ["title", "description", "status", "priority", "deadline"] as const;
-type FieldName = (typeof FIELDS)[number];
-const isFieldName = (key: string): key is FieldName => (FIELDS as readonly string[]).includes(key);
 
 export const EMPTY_TASK_VALUES: TaskFormValues = {
   title: "",
@@ -108,9 +107,7 @@ export function TaskForm({
     // `raw`: the action re-parses the same values with the same schema, so it must get them untransformed.
     resolver: zodResolver(taskFieldsSchema, undefined, { raw: true }),
     defaultValues,
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-    shouldFocusError: true,
+    ...ACTION_FORM_OPTIONS,
   });
 
   // Justified effect: it syncs a parent callback (the unsaved-changes guard); it loads no data.
@@ -131,16 +128,10 @@ export function TaskForm({
         return;
       }
 
-      const unplaced: string[] = [];
-      for (const [key, messages] of Object.entries(result.fieldErrors ?? {})) {
-        const message = messages?.[0];
-        if (message === undefined) continue;
-        if (isFieldName(key)) setError(key, { message });
-        else unplaced.push(message);
-      }
-      const message = [result.formError, ...unplaced].filter((part) => part !== undefined).join(" ");
-      if (message !== "") setFormError(message);
-      const firstInvalid = FIELDS.find((field) => result.fieldErrors?.[field] !== undefined);
+      const { placed, banner } = splitActionErrors(result, FIELDS);
+      for (const [field, message] of placed) setError(field, { message });
+      setFormError(banner);
+      const firstInvalid = placed[0]?.[0];
       if (firstInvalid !== undefined) setFocus(firstInvalid);
     });
   });
@@ -159,24 +150,13 @@ export function TaskForm({
         void submit(event);
       }}
     >
-      {formError !== null ? (
-        <div
-          role="alert"
-          className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive"
-        >
-          {formError}
-        </div>
-      ) : null}
+      <FormErrorBanner message={formError} />
 
-      <FormField label="Title" {...(errors.title?.message === undefined ? {} : { error: errors.title.message })}>
+      <FormField label="Title" error={errors.title?.message}>
         <Input autoComplete="off" readOnly={pending} {...register("title")} />
       </FormField>
 
-      <FormField
-        label="Description"
-        description="Optional."
-        {...(errors.description?.message === undefined ? {} : { error: errors.description.message })}
-      >
+      <FormField label="Description" description="Optional." error={errors.description?.message}>
         <Textarea rows={4} readOnly={pending} {...register("description")} />
       </FormField>
 
@@ -303,11 +283,7 @@ function ChoiceField<T extends string>({
           ))}
         </SelectContent>
       </Select>
-      {error ? (
-        <p id={errorId} role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <FieldError id={errorId} message={error} />
     </div>
   );
 }
