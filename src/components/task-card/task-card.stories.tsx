@@ -148,7 +148,7 @@ export const SaveError: Story = {
     await expect(description).toHaveValue("Numbers for Q4");
     await expect(args.onSave).toHaveBeenCalledOnce();
     await expect(args.onSaved).not.toHaveBeenCalled();
-    await expect(canvas.getByRole("button", { name: "Save changes" })).not.toHaveAttribute("aria-disabled");
+    await expect(await canvas.findByRole("button", { name: "Save changes" })).not.toHaveAttribute("aria-disabled");
   },
 };
 

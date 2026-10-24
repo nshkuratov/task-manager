@@ -36,4 +36,5 @@ playwright-report/
 CLAUDE.md
 docs/
 scripts/
-DESIGN.md
+**/DESIGN*
+DESIGNS.md
