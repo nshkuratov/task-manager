@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { addTask, createList, expect, taskTitles, test, uniqueName } from "./fixtures";
+import { addTask, createList, expect, openTaskEdit, taskTitles, test, uniqueName } from "./fixtures";
 
-test("R-CARD-1: soft navigation opens the card as a modal; hard navigation renders the standalone page", async ({
+test("R-CARD-1: the title opens the standalone page; Edit opens the intercepted modal", async ({
   page,
 }) => {
   const listName = uniqueName("Routes");
@@ -15,20 +15,22 @@ test("R-CARD-1: soft navigation opens the card as a modal; hard navigation rende
   expect(taskPath).toMatch(/^\/tasks\/[0-9a-f-]{36}$/);
   await link.click();
 
-  await expect(page.getByRole("dialog", { name: title })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === taskPath);
+
+  await page.goBack();
+  await expect(page).toHaveURL((url) => url.pathname === listPath);
+  await openTaskEdit(page, title);
+  await expect(page.getByRole("dialog", { name: "Edit task" })).toBeVisible();
   await expect(page).toHaveURL((url) => url.pathname === taskPath);
   // By element, not role: the open dialog aria-hides the list behind it.
   await expect(page.locator("h1", { hasText: listName })).toBeAttached();
 
   await page.goBack();
   await expect(page).toHaveURL((url) => url.pathname === listPath);
-  await expect(page.locator('[role="dialog"]')).toHaveCount(0);
-
-  await page.goto(taskPath ?? "");
-  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(
-    page.getByRole("navigation", { name: "breadcrumb" }).getByRole("link", { name: listName, exact: true }),
+    page.getByRole("heading", { level: 1, name: listName }),
   ).toBeVisible();
 });
 

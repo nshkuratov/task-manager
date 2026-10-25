@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useId, useState, useTransition, type Ref } from "react";
+import { useEffect, useId, useState, useTransition, type ReactNode, type Ref } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
 import { FieldError, FormErrorBanner, FormField } from "@/components/common/form-field";
@@ -77,12 +77,19 @@ export interface TaskFormProps {
   onSuccess?: () => void;
   /** Reports unsaved changes, for the host's "Discard unsaved changes?" guard. */
   onDirtyChange?: (dirty: boolean) => void;
+  /** Extra footer control before the submit button; the dialogs pass their Cancel here. */
+  cancel?: ReactNode;
+  /** Places the extra control and submit button at opposite edges of the footer. */
+  spreadActions?: boolean;
 }
 
 const SUBMIT_LABELS = {
   create: { idle: "Add task", pending: "Adding…" },
   edit: { idle: "Save changes", pending: "Saving…" },
 } as const;
+
+const ABSOLUTE_ERROR =
+  "relative [&>[role=alert]]:absolute [&>[role=alert]]:inset-x-0 [&>[role=alert]]:top-full [&>[role=alert]]:mt-0.5 [&>[role=alert]]:text-xs [&>[role=alert]]:leading-4";
 
 export function TaskForm({
   mode,
@@ -91,6 +98,8 @@ export function TaskForm({
   onSubmit,
   onSuccess,
   onDirtyChange,
+  cancel,
+  spreadActions = false,
 }: TaskFormProps) {
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
@@ -141,7 +150,7 @@ export function TaskForm({
   return (
     <form
       noValidate
-      className="grid gap-5"
+      className="relative grid gap-5"
       onSubmit={(event) => {
         if (blocked) {
           event.preventDefault();
@@ -150,17 +159,29 @@ export function TaskForm({
         void submit(event);
       }}
     >
-      <FormErrorBanner message={formError} />
+      <div className="absolute inset-x-0 top-full mt-1">
+        <FormErrorBanner message={formError} />
+      </div>
 
-      <FormField label="Title" error={errors.title?.message}>
-        <Input autoComplete="off" readOnly={pending} {...register("title")} />
+      <FormField label="Title" error={errors.title?.message} className={ABSOLUTE_ERROR}>
+        <Input
+          autoComplete="off"
+          readOnly={pending}
+          className="h-10 rounded-xl px-3 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1"
+          {...register("title")}
+        />
       </FormField>
 
-      <FormField label="Description" description="Optional." error={errors.description?.message}>
-        <Textarea rows={4} readOnly={pending} {...register("description")} />
+      <FormField label="Description" error={errors.description?.message} className={ABSOLUTE_ERROR}>
+        <Textarea
+          rows={3}
+          readOnly={pending}
+          className="field-sizing-fixed h-20 min-h-20 max-h-20 resize-none overflow-y-auto rounded-xl px-3 py-2.5 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1"
+          {...register("description")}
+        />
       </FormField>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Controller
           control={control}
           name="status"
@@ -213,12 +234,14 @@ export function TaskForm({
         )}
       />
 
-      <div className="flex justify-end">
+      <div className={`mt-1 flex items-center gap-3 ${spreadActions ? "justify-between" : "justify-end"}`}>
+        {cancel}
         <PendingButton
           type="submit"
           pending={pending}
           pendingLabel={labels.pending}
           aria-disabled={blocked || undefined}
+          className="h-10 rounded-full px-5"
         >
           {labels.idle}
         </PendingButton>
@@ -255,7 +278,7 @@ function ChoiceField<T extends string>({
   const id = useId();
   const errorId = `${id}-error`;
   return (
-    <div className="grid gap-2">
+    <div className={`grid gap-2 ${ABSOLUTE_ERROR}`}>
       <Label htmlFor={id}>{label}</Label>
       <Select
         value={value}
@@ -268,7 +291,7 @@ function ChoiceField<T extends string>({
         <SelectTrigger
           ref={triggerRef}
           id={id}
-          className="w-full"
+          className="w-full rounded-xl px-3 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1 data-[size=default]:h-10"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
           onBlur={onBlur}

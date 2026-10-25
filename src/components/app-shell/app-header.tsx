@@ -11,7 +11,7 @@ export interface AppHeaderProps {
 export function AppHeader({ email, signOut }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-[60px] [header:has(~_div_[data-wide-page])_&]:max-w-[90rem]">
         <Brand />
         <div className="flex items-center gap-1">
           <ThemeToggle />

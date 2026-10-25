@@ -71,6 +71,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       const title = `Task ${listName}`;
       const description = `Saved from the keyboard ${listName}`;
       const titleLink = page.getByRole("link", { name: title, exact: true });
+      const editTrigger = page.getByRole("button", { name: `Actions for ${title}`, exact: true });
 
       await test.step("sign in", async () => {
         await page.goto("/login");
@@ -128,21 +129,23 @@ for (const colorScheme of ["light", "dark"] as const) {
         await expectFocusVisible(page);
       });
 
-      await test.step("Escape closes the card and returns focus to its link", async () => {
-        await page.keyboard.down("Shift");
-        await tabTo(page, titleLink);
-        await page.keyboard.up("Shift");
+      await test.step("Escape closes the edit modal and returns focus to its menu trigger", async () => {
+        await tabTo(page, editTrigger);
         await page.keyboard.press("Enter");
-        await expect(page.getByRole("dialog", { name: title })).toBeVisible();
+        await arrowTo(page, page.getByRole("menuitem", { name: "Edit", exact: true }));
+        await page.keyboard.press("Enter");
+        await expect(page.getByRole("dialog", { name: "Edit task" })).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(page.locator('[role="dialog"]')).toHaveCount(0);
-        await expect(titleLink).toBeFocused();
+        await expect(editTrigger).toBeFocused();
         await expectFocusVisible(page);
       });
 
       await test.step("open the card, edit and save", async () => {
         await page.keyboard.press("Enter");
-        const dialog = page.getByRole("dialog", { name: title });
+        await arrowTo(page, page.getByRole("menuitem", { name: "Edit", exact: true }));
+        await page.keyboard.press("Enter");
+        const dialog = page.getByRole("dialog", { name: "Edit task" });
         await expect(dialog).toBeVisible();
         await tabTo(page, dialog.getByLabel("Description", { exact: true }));
         await page.keyboard.type(description);
@@ -150,7 +153,7 @@ for (const colorScheme of ["light", "dark"] as const) {
         await page.keyboard.press("Enter");
         await expect(page.locator('[role="dialog"]')).toHaveCount(0);
         await expect(page.getByRole("heading", { level: 1, name: listName })).toBeVisible();
-        await expect(titleLink).toBeFocused();
+        await expect(editTrigger).toBeFocused();
         await expectFocusVisible(page);
       });
 
@@ -205,33 +208,38 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 signedIn(
-  "R-EVAL-4: a task modal opened with nothing focused does not send focus back to an earlier task's link",
+  "R-EVAL-4: a task modal opened with nothing focused does not return focus to an earlier row action",
   async ({ page }) => {
     await page.goto(await seededListPath(page));
-    const first = page.getByRole("link", { name: "Finalize pricing page copy", exact: true });
-    const second = page.getByRole("link", { name: "Record the product demo video", exact: true });
+    const first = page.getByRole("button", { name: "Actions for Finalize pricing page copy", exact: true });
+    const second = page.getByRole("button", { name: "Actions for Record the product demo video", exact: true });
 
     await first.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("dialog", { name: "Finalize pricing page copy" })).toBeVisible();
+    await arrowTo(page, page.getByRole("menuitem", { name: "Edit", exact: true }));
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog", { name: "Edit task" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(first).toBeFocused();
 
-    // Safari does not focus a clicked link: a synthetic click opens the card with <body> focused.
+    await second.click();
+    const edit = page.getByRole("menuitem", { name: "Edit", exact: true });
+    // A synthetic activation can open the modal with <body> focused.
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });
-    await second.dispatchEvent("click");
-    await expect(page.getByRole("dialog", { name: "Record the product demo video" })).toBeVisible();
+    await edit.dispatchEvent("click");
+    await expect(page.getByRole("dialog", { name: "Edit task" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator('[role="dialog"]')).toHaveCount(0);
     await expect(first).not.toBeFocused();
   },
 );
 
-signedIn("R-EVAL-4: focus returns to the task link when the card replaced its loading skeleton", async ({ page }) => {
+signedIn("R-EVAL-4: focus returns to Edit's menu trigger when the card replaces its loading skeleton", async ({ page }) => {
   await page.goto(await seededListPath(page));
   const link = page.getByRole("link", { name: "Finalize pricing page copy", exact: true });
+  const trigger = page.getByRole("button", { name: "Actions for Finalize pricing page copy", exact: true });
   const taskPath = await link.getAttribute("href");
   expect(taskPath).toMatch(/^\/tasks\/[0-9a-f-]{36}$/);
 
@@ -247,34 +255,41 @@ signedIn("R-EVAL-4: focus returns to the task link when the card replaced its lo
   });
   await page.waitForLoadState("networkidle");
 
-  await link.focus();
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await arrowTo(page, page.getByRole("menuitem", { name: "Edit", exact: true }));
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Loading task…" })).toBeVisible();
   // The skeleton's own close runs after the card mounts; it must not pull focus behind the open card.
-  // Any element with the link's href (the list may re-render it), via document-level focusin.
-  await page.evaluate((href) => {
-    const counter = window as unknown as { linkFocusedBehindCard: number };
-    counter.linkFocusedBehindCard = 0;
+  // Any matching row action (the list may re-render it), via document-level focusin.
+  await page.evaluate(() => {
+    const counter = window as unknown as { openerFocusedBehindCard: number };
+    counter.openerFocusedBehindCard = 0;
     document.addEventListener(
       "focusin",
       (event) => {
-        if (event.target instanceof HTMLAnchorElement && event.target.getAttribute("href") === href) {
-          counter.linkFocusedBehindCard += 1;
+        if (
+          event.target instanceof HTMLButtonElement &&
+          event.target.getAttribute("aria-label") === "Actions for Finalize pricing page copy"
+        ) {
+          counter.openerFocusedBehindCard += 1;
         }
       },
       true,
     );
-  }, taskPath);
+  });
   release();
-  const card = page.getByRole("dialog", { name: "Finalize pricing page copy" });
+  const card = page.getByRole("dialog", { name: "Edit task" });
   await expect(card).toBeVisible();
   await expect(card.getByLabel("Title", { exact: true })).toBeFocused();
   await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running"));
   expect(
-    await page.evaluate(() => (window as unknown as { linkFocusedBehindCard: number }).linkFocusedBehindCard),
-    "times the link took focus while the card was open",
+    await page.evaluate(
+      () => (window as unknown as { openerFocusedBehindCard: number }).openerFocusedBehindCard,
+    ),
+    "times the menu trigger took focus while the card was open",
   ).toBe(0);
   await page.keyboard.press("Escape");
   await expect(page.locator('[role="dialog"]')).toHaveCount(0);
-  await expect(link).toBeFocused();
+  await expect(trigger).toBeFocused();
 });

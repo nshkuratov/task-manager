@@ -39,8 +39,8 @@ export function ListsView({
   const subtitle = query === undefined ? countLabel(total) : `Showing ${summaries.length} of ${countLabel(total)}`;
 
   return (
-    <div className="grid gap-6">
-      <div id={LISTS_HEADER_ID}>
+    <div data-wide-page data-app-bg className="grid gap-6 pb-12">
+      <div id={LISTS_HEADER_ID} className="sr-only">
         <PageHeader title="Your lists" description={subtitle} />
       </div>
       {/* Stays mounted across searches, so the outcome of each one is announced when the new results render. */}

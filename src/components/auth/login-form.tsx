@@ -1,11 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, LockKeyholeIcon, MailIcon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
-import { FieldError, FormErrorBanner, FormField } from "@/components/common/form-field";
+import { FieldError } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const emailId = useId();
+  const emailErrorId = `${emailId}-error`;
   const passwordId = useId();
   const passwordErrorId = `${passwordId}-error`;
 
@@ -55,7 +57,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
   return (
     <form
       noValidate
-      className="grid gap-4"
+      className="relative grid gap-7"
       onSubmit={(event) => {
         if (pending) {
           event.preventDefault();
@@ -64,31 +66,59 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
         void submit(event);
       }}
     >
-      <FormErrorBanner message={formError} />
-
-      <FormField label="Email" error={errors.email?.message}>
-        <Input type="email" autoComplete="username" inputMode="email" readOnly={pending} {...register("email")} />
-      </FormField>
+      <div className="-mb-[10px] grid gap-1.5">
+        <Label htmlFor={emailId} className="text-sm font-normal">
+          Email
+        </Label>
+        <div className="relative">
+          <MailIcon
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            id={emailId}
+            type="email"
+            autoComplete="username"
+            inputMode="email"
+            placeholder="you@example.com"
+            readOnly={pending}
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? emailErrorId : undefined}
+            className="h-11.5 rounded-xl bg-background/30 pr-4 pl-12 text-base shadow-none focus-visible:border-foreground focus-visible:ring-0 aria-invalid:ring-0 aria-invalid:focus-visible:border-destructive md:text-sm"
+            {...register("email")}
+          />
+          <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
+            <FieldError id={emailErrorId} message={errors.email?.message} />
+          </div>
+        </div>
+      </div>
 
       {/* Hand-wired: FormField's Slot passes its ARIA to a single child, and this field needs a toggle beside it. */}
-      <div className="grid gap-2">
-        <Label htmlFor={passwordId}>Password</Label>
+      <div className="grid gap-1.5">
+        <Label htmlFor={passwordId} className="text-sm font-normal">
+          Password
+        </Label>
         <div className="relative">
+          <LockKeyholeIcon
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
+          />
           <Input
             id={passwordId}
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
+            placeholder="Your password"
             readOnly={pending}
             aria-invalid={errors.password ? true : undefined}
             aria-describedby={errors.password ? passwordErrorId : undefined}
-            className="pr-11"
+            className="h-11.5 rounded-xl bg-background/30 pr-12 pl-12 text-base shadow-none focus-visible:border-foreground focus-visible:ring-0 aria-invalid:ring-0 aria-invalid:focus-visible:border-destructive md:text-sm"
             {...register("password")}
           />
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute inset-y-0 right-0 h-full"
+            className="absolute inset-y-0.5 right-0.5 h-10.5 w-10.5 rounded-xl text-muted-foreground"
             aria-label="Show password"
             aria-pressed={showPassword}
             disabled={pending}
@@ -96,15 +126,27 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
               setShowPassword((shown) => !shown);
             }}
           >
-            {showPassword ? <EyeOffIcon aria-hidden /> : <EyeIcon aria-hidden />}
+            {showPassword ? <EyeOffIcon aria-hidden className="size-5" /> : <EyeIcon aria-hidden className="size-5" />}
           </Button>
+          <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
+            <FieldError id={passwordErrorId} message={errors.password?.message} />
+          </div>
         </div>
-        <FieldError id={passwordErrorId} message={errors.password?.message} />
       </div>
 
-      <PendingButton type="submit" pending={pending} pendingLabel="Signing in…" className="w-full">
+      <PendingButton
+        type="submit"
+        pending={pending}
+        pendingLabel="Signing in…"
+        className="mt-1 h-11.5 w-full rounded-full bg-linear-to-br from-secondary-foreground/80 to-primary text-base font-medium shadow-lg shadow-primary/10 hover:brightness-110 dark:from-primary dark:to-primary/85"
+      >
         Sign in
       </PendingButton>
+      {formError !== null ? (
+        <p role="alert" className="absolute inset-x-0 top-full mt-1 text-xs leading-4 text-destructive">
+          {formError}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -112,6 +112,12 @@ export function taskTitles(page: Page): Locator {
   return page.getByRole("table").getByRole("rowgroup").nth(1).getByRole("link");
 }
 
+/** Opens the intercepted edit modal from a task row's actions menu. */
+export async function openTaskEdit(page: Page, title: string): Promise<void> {
+  await page.getByRole("button", { name: `Actions for ${title}`, exact: true }).click();
+  await page.getByRole("menuitem", { name: "Edit", exact: true }).click();
+}
+
 export async function setStatus(page: Page, title: string, status: "New" | "In progress" | "Done") {
   await page.getByRole("combobox", { name: `Status for ${title}`, exact: true }).click();
   await page.getByRole("option", { name: status, exact: true }).click();

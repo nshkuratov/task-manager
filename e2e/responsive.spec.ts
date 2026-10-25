@@ -1,5 +1,5 @@
 import { test as base, type Locator, type Page } from "@playwright/test";
-import { expect, seededListPath, test } from "./fixtures";
+import { expect, openTaskEdit, seededListPath, test } from "./fixtures";
 
 /** Tailwind's `sm`: below it the task table is wider than its container. */
 const SM_BREAKPOINT = 640;
@@ -75,8 +75,8 @@ for (const viewport of VIEWPORTS) {
       const taskLink = page.getByRole("link", { name: "Finalize pricing page copy", exact: true });
       const taskPath = await taskLink.getAttribute("href");
       expect(taskPath).toMatch(/^\/tasks\/[0-9a-f-]{36}$/);
-      await taskLink.click();
-      await expectDialogFits(page, page.getByRole("dialog", { name: "Finalize pricing page copy" }));
+      await openTaskEdit(page, "Finalize pricing page copy");
+      await expectDialogFits(page, page.getByRole("dialog", { name: "Edit task" }));
 
       await page.goto(taskPath ?? "");
       await expect(page.getByRole("heading", { level: 1, name: "Finalize pricing page copy" })).toBeVisible();

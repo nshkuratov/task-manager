@@ -15,6 +15,7 @@ import type { Repositories } from "@/server/repositories";
 
 export const TASK_GONE = "This task no longer exists.";
 export const LIST_GONE = "This list no longer exists.";
+export const TASK_TITLE_TAKEN = "A task with this title already exists in this list.";
 
 /** What every task handler needs; `defineAction` supplies a superset. */
 export interface TaskHandlerContext<I> {
@@ -39,6 +40,9 @@ export async function createTaskCore({
   userId,
   repos,
 }: TaskHandlerContext<CreateTaskOutput>): Promise<ActionResult<Task>> {
+  if ((await repos.tasks.findByTitle(userId, listId, fields.title)) !== null) {
+    return { ok: false, fieldErrors: { title: [TASK_TITLE_TAKEN] } };
+  }
   const task = await repos.tasks.create(userId, listId, fields);
   return task === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: task };
 }
@@ -48,6 +52,11 @@ export async function updateTaskCore({
   userId,
   repos,
 }: TaskHandlerContext<UpdateTaskOutput>): Promise<ActionResult<Task>> {
+  const task = await repos.tasks.get(userId, id);
+  if (task === null) return { ok: false, formError: TASK_GONE };
+  if ((await repos.tasks.findByTitle(userId, task.listId, fields.title, id)) !== null) {
+    return { ok: false, fieldErrors: { title: [TASK_TITLE_TAKEN] } };
+  }
   return taskResult(await repos.tasks.update(userId, id, fields));
 }
 

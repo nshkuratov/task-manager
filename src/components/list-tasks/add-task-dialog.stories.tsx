@@ -10,7 +10,6 @@ const meta = {
   component: AddTaskDialog,
   args: {
     listId: LIST_ID,
-    listName: "Product launch",
     timeZone: "Europe/Amsterdam",
     createTask: fn<AddTaskDialogProps["createTask"]>(() => Promise.resolve({ ok: true, data: undefined })),
   },

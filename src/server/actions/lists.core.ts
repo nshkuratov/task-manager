@@ -22,11 +22,16 @@ export interface ListHandlerContext<I> {
 /** The cached pages showing a list; `/tasks/<id>` pages read the session cookie, so they are never cached. */
 export const listPaths = (listId: string): string[] => ["/lists", `/lists/${listId}`];
 
+export const LIST_NAME_TAKEN = "A list with this name already exists.";
+
 export async function createListCore({
   input,
   userId,
   repos,
 }: ListHandlerContext<CreateListOutput>): Promise<ActionResult<TaskList>> {
+  if ((await repos.lists.findByName(userId, input.name)) !== null) {
+    return { ok: false, fieldErrors: { name: [LIST_NAME_TAKEN] } };
+  }
   return { ok: true, data: await repos.lists.create(userId, input.name) };
 }
 
@@ -36,6 +41,9 @@ export async function renameListCore({
   userId,
   repos,
 }: ListHandlerContext<RenameListOutput>): Promise<ActionResult<TaskList>> {
+  if ((await repos.lists.findByName(userId, input.name, input.id)) !== null) {
+    return { ok: false, fieldErrors: { name: [LIST_NAME_TAKEN] } };
+  }
   const list = await repos.lists.rename(userId, input.id, input.name);
   return list === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: list };
 }

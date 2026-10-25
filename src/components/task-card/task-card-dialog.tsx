@@ -6,7 +6,7 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DeadlineSummary, TaskCard, type TaskCardProps } from "./task-card";
+import { TaskCard, type TaskCardProps } from "./task-card";
 
 /**
  * `router.back()` at most once: the modal is an intercepted history entry, and a second call (double Escape, a
@@ -23,8 +23,9 @@ function useCloseModal() {
 }
 
 /**
- * The element that had focus when a modal frame mounted outside any dialog: the task link that opened it. Module
- * scope, so the card that replaces its own loading skeleton still knows the link, not the skeleton's button.
+ * The element that had focus when a modal frame mounted outside any dialog: normally the row action that opened
+ * Edit. Module scope, so the card that replaces its own loading skeleton still knows the opener, not the
+ * skeleton's button.
  */
 let modalOpener: HTMLElement | null = null;
 /**
@@ -45,7 +46,7 @@ function ModalFrame({
   titleClassName,
 }: {
   title: ReactNode;
-  description: ReactNode;
+  description?: ReactNode;
   onOpenChange: (open: boolean) => void;
   children?: ReactNode;
   titleClassName?: string;
@@ -69,9 +70,11 @@ function ModalFrame({
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
+        showCloseButton={false}
+        {...(description === undefined ? { "aria-describedby": undefined } : {})}
+        className="max-h-[calc(100dvh-2rem)] gap-5 overflow-y-auto rounded-3xl p-6 sm:max-w-[450px]"
         // A modal Radix dialog returns focus only to its Trigger; opened by a route, it has none, and focus would
-        // drop to <body>. A link removed meanwhile (the task was deleted) keeps that default.
+        // drop to <body>. An opener removed meanwhile keeps that default.
         onCloseAutoFocus={(event) => {
           if (modalOpener?.isConnected !== true) return;
           event.preventDefault();
@@ -79,8 +82,10 @@ function ModalFrame({
         }}
       >
         <DialogHeader>
-          <DialogTitle className={titleClassName ?? "pr-6 text-xl leading-tight break-words"}>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle className={titleClassName ?? "text-xl leading-7 font-medium tracking-tight break-words"}>
+            {title}
+          </DialogTitle>
+          {description === undefined ? null : <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
       </DialogContent>
@@ -90,10 +95,17 @@ function ModalFrame({
 
 export type TaskCardDialogProps = Omit<
   TaskCardProps,
-  "headline" | "onSaved" | "onDeleted" | "onDirtyChange" | "onSavingChange"
+  | "headline"
+  | "showMetadata"
+  | "showDeleteAction"
+  | "onSaved"
+  | "onDeleted"
+  | "onDirtyChange"
+  | "onSavingChange"
+  | "formCancel"
 >;
 
-/** The task card over its list. Closing with unsaved edits asks first; closing after a save or delete does not. */
+/** The task card over its list. Closing with unsaved edits asks first; closing after a save does not. */
 export function TaskCardDialog(props: TaskCardDialogProps) {
   const close = useCloseModal();
   const [dirty, setDirty] = useState(false);
@@ -113,12 +125,7 @@ export function TaskCardDialog(props: TaskCardDialogProps) {
 
   return (
     <ModalFrame
-      title={props.task.title}
-      description={
-        <>
-          In {props.listName} · <DeadlineSummary deadlineInfo={props.deadlineInfo} />
-        </>
-      }
+      title="Edit task"
       onOpenChange={(open) => {
         if (!open) requestClose();
       }}
@@ -126,10 +133,20 @@ export function TaskCardDialog(props: TaskCardDialogProps) {
       <TaskCard
         {...props}
         headline="none"
+        showDeleteAction={false}
         // The form's dirty flag reaches this component a render after its reset, so these must not use the guard.
         onSaved={close}
-        onDeleted={close}
         onDirtyChange={setDirty}
+        formCancel={
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 rounded-full px-5 dark:bg-transparent"
+            onClick={requestClose}
+          >
+            Cancel
+          </Button>
+        }
         onSavingChange={(next) => {
           saving.current = next;
         }}
@@ -159,7 +176,7 @@ export function TaskCardDialogSkeleton() {
     <ModalFrame
       title="Loading task…"
       description="Fetching the latest details."
-      titleClassName="text-xl leading-tight text-muted-foreground"
+      titleClassName="text-xl leading-7 font-medium tracking-tight text-muted-foreground"
       onOpenChange={(open) => {
         if (!open) close();
       }}
@@ -185,7 +202,9 @@ export function TaskNotFoundDialog() {
       }}
     >
       <div className="flex justify-end">
-        <Button onClick={close}>Back to the list</Button>
+        <Button className="h-10 rounded-full px-5" onClick={close}>
+          Back to the list
+        </Button>
       </div>
     </ModalFrame>
   );

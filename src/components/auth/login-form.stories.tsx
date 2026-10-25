@@ -11,7 +11,7 @@ const meta = {
   args: { signIn: fn<SignInAction>(resolvesNothing) },
   decorators: [
     (Story) => (
-      <div className="max-w-sm">
+      <div className="w-full max-w-[calc(24.5rem-60px)] pb-6">
         <Story />
       </div>
     ),
@@ -20,6 +20,8 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
 
 function fields(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);

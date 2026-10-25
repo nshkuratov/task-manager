@@ -6,7 +6,7 @@ import { ListsEmpty } from "./lists-empty";
 const meta = {
   title: "Lists/ListsEmpty",
   component: ListsEmpty,
-  args: { kind: "no-lists", action: <Button>New list</Button> },
+  args: { kind: "no-lists", action: <Button className="h-10 rounded-full px-5">New list</Button> },
 } satisfies Meta<typeof ListsEmpty>;
 
 export default meta;
@@ -14,7 +14,7 @@ type Story = StoryObj<typeof meta>;
 
 export const NoLists: Story = {
   name: "No lists yet: an invitation and the create action",
-  args: { kind: "no-lists", action: <Button>New list</Button> },
+  args: { kind: "no-lists", action: <Button className="h-10 rounded-full px-5">New list</Button> },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("heading", { level: 2, name: "Create your first list" })).toBeVisible();

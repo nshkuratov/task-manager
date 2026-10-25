@@ -5,6 +5,7 @@ import {
   listCard,
   localDateTime,
   openListMenu,
+  openTaskEdit,
   setStatus,
   taskTitles,
   test,
@@ -66,9 +67,9 @@ test("R-LIST-5, R-LIST-6, R-LIST-7, R-TASKS-2, R-TASKS-3, R-TASKS-4, R-TASKS-5, 
     const link = taskTitles(page).filter({ hasText: dueSoon });
     const href = await link.getAttribute("href");
     expect(href).toMatch(/^\/tasks\/[0-9a-f-]{36}$/);
-    await link.click();
+    await openTaskEdit(page, dueSoon);
 
-    const dialog = page.getByRole("dialog", { name: dueSoon });
+    const dialog = page.getByRole("dialog", { name: "Edit task" });
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL((url) => url.pathname === href);
     // By element, not role: the open dialog aria-hides the list behind it, which a role query reads as gone.

@@ -40,7 +40,7 @@ export function StatusSelect({ status, title, onChange }: StatusSelectProps) {
         aria-label={`Status for ${title}`}
         aria-busy={pending || undefined}
         aria-disabled={pending || undefined}
-        className="min-w-32 aria-disabled:opacity-70"
+        className="min-w-32 rounded-full border-border bg-background/75 shadow-none aria-disabled:opacity-70"
       >
         <SelectValue />
       </SelectTrigger>
