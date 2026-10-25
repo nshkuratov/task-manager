@@ -52,18 +52,21 @@ type Story = StoryObj<typeof meta>;
 const page = () => within(document.body);
 
 async function openDialog() {
-  const dialog = await page().findByRole("dialog", { name: "Write report" });
+  const dialog = await page().findByRole("dialog", { name: "Edit task" });
   await waitFor(() => expect(dialog).toBeVisible());
   return dialog;
 }
 
 export const Opens: Story = {
-  name: "R-CARD-1: the card opens as a dialog named by the task and described by its list and urgency",
+  name: "R-CARD-1: the card opens in the compact edit dialog",
   play: async () => {
     const dialog = await openDialog();
-    await expect(dialog).toHaveAccessibleDescription("In Work · 2 days overdue");
     await expect(within(dialog).getByRole("textbox", { name: "Title" })).toHaveValue("Write report");
-    await expect(within(dialog).getByRole("link", { name: "Work" })).toHaveAttribute("href", `/lists/${LIST_ID}`);
+    await expect(within(dialog).getByRole("link", { name: "Work" })).toHaveAttribute(
+      "href",
+      `/lists/${LIST_ID}`,
+    );
+    await expect(within(dialog).queryByRole("button", { name: "Delete task" })).toBeNull();
   },
 };
 
@@ -164,21 +167,6 @@ export const ClosableAfterFailedSave: Story = {
     await userEvent.keyboard("{Escape}");
     await page().findByRole("alertdialog", { name: "Discard unsaved changes?" });
     await expect(getRouter().back).not.toHaveBeenCalled();
-  },
-};
-
-export const DeleteCloses: Story = {
-  name: "R-TASKS-4: deleting from the dialog goes back to the list",
-  play: async ({ args }) => {
-    const dialog = await openDialog();
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
-    const confirm = await page().findByRole("alertdialog", { name: "Delete “Write report”?" });
-    await userEvent.click(within(confirm).getByRole("button", { name: "Delete task" }));
-
-    await waitFor(() => expect(getRouter().back).toHaveBeenCalledOnce());
-    await expect(args.onDelete).toHaveBeenCalledOnce();
-    await expect(args.onDelete).toHaveBeenCalledWith({ id: TASK.id });
-    await expect(getRouter().replace).not.toHaveBeenCalled();
   },
 };
 

@@ -3,7 +3,7 @@ import type { TaskFieldsOutput } from "@/contracts";
 import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
 import { createRepositories, type Repositories } from "@/server/repositories";
 import { createActionRunner } from "./define-action";
-import { listActionSpecs } from "./lists.core";
+import { listActionSpecs, LIST_NAME_TAKEN } from "./lists.core";
 import { LIST_GONE } from "./tasks.core";
 
 const NOW = new Date("2026-10-23T10:00:00Z");
@@ -95,6 +95,24 @@ describe("createList", () => {
     const result = await actions.createList(form);
     expect(result.ok && result.data.name).toBe("x".repeat(80));
   });
+
+  it("R-LIST-5: rejects a name the user already has, case-insensitively, and writes nothing", async () => {
+    await aliceList("Groceries");
+
+    await expect(actions.createList({ name: " GROCERIES " })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { name: [LIST_NAME_TAKEN] },
+    });
+    await expect(repos.lists.listWithTaskFacts(alice)).resolves.toHaveLength(1);
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("R-LIST-5: the same name for another user is not a conflict", async () => {
+    await aliceList("Groceries");
+    sessionUser = bob;
+
+    await expect(actions.createList({ name: "Groceries" })).resolves.toMatchObject({ ok: true });
+  });
 });
 
 describe("renameList", () => {
@@ -120,6 +138,18 @@ describe("renameList", () => {
     });
     await expect(repos.lists.get(alice, list.id)).resolves.toMatchObject({ name: "Groceries" });
     expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("R-LIST-6: rejects a rename to a name another list has, but keeping its own name is fine", async () => {
+    const list = await aliceList("Groceries");
+    await aliceList("Work");
+
+    await expect(actions.renameList({ id: list.id, name: " work " })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { name: [LIST_NAME_TAKEN] },
+    });
+    await expect(actions.renameList({ id: list.id, name: "Groceries" })).resolves.toMatchObject({ ok: true });
+    await expect(repos.lists.get(alice, list.id)).resolves.toMatchObject({ name: "Groceries" });
   });
 });
 

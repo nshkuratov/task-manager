@@ -34,10 +34,10 @@ export default async function ListTasksPage({ params, searchParams }: PageProps<
   if (data === null) notFound();
   const { list, summary, tasks, totalUnfiltered, countsByStatus } = data;
 
-  const addTask = <AddTaskDialog listId={list.id} listName={list.name} timeZone={timeZone} createTask={createTask} />;
+  const addTask = <AddTaskDialog listId={list.id} timeZone={timeZone} createTask={createTask} />;
 
   return (
-    <div className="grid gap-6">
+    <div data-app-bg data-wide-page className="grid gap-6 pb-12">
       <ListHeader summary={summary} actions={totalUnfiltered > 0 ? addTask : undefined} />
       {totalUnfiltered > 0 ? <StatusFilter selected={statuses} counts={countsByStatus} /> : null}
       <TaskTable

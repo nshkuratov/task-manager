@@ -3,7 +3,7 @@ import type { TaskList } from "@/contracts";
 import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
 import { createRepositories, type Repositories } from "@/server/repositories";
 import { createActionRunner } from "./define-action";
-import { LIST_GONE, TASK_GONE, taskActionSpecs } from "./tasks.core";
+import { LIST_GONE, TASK_GONE, TASK_TITLE_TAKEN, taskActionSpecs } from "./tasks.core";
 
 const NOW = new Date("2026-10-22T10:00:00Z");
 
@@ -116,6 +116,26 @@ describe("createTask", () => {
     await expect(tasksInList()).resolves.toEqual([]);
     expect(revalidate).not.toHaveBeenCalled();
   });
+
+  it("R-TASKS-2: rejects a title the list already has, case-insensitively, and writes nothing", async () => {
+    await aliceTask("Write report");
+
+    await expect(actions.createTask({ listId: list.id, title: " write REPORT ", deadline: null })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { title: [TASK_TITLE_TAKEN] },
+    });
+    await expect(tasksInList()).resolves.toHaveLength(1);
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("R-TASKS-2: the same title in another list is not a conflict", async () => {
+    const other = await repos.lists.create(alice, "Home");
+    await aliceTask("Write report");
+
+    await expect(actions.createTask({ listId: other.id, title: "Write report", deadline: null })).resolves.toMatchObject(
+      { ok: true },
+    );
+  });
 });
 
 describe("updateTask", () => {
@@ -154,6 +174,20 @@ describe("updateTask", () => {
 
     await actions.updateTask({ id: created.data.id, title: "Dated", deadline: "" });
     await expect(repos.tasks.get(alice, created.data.id)).resolves.toMatchObject({ deadline: null });
+  });
+
+  it("R-TASKS-3: rejects a rename to a title another task in the list has, keeping its own title allowed", async () => {
+    const target = await aliceTask("Write report");
+    await aliceTask("Book flights");
+
+    await expect(actions.updateTask({ id: target.id, title: " book FLIGHTS ", deadline: null })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { title: [TASK_TITLE_TAKEN] },
+    });
+    await expect(actions.updateTask({ id: target.id, title: "Write report", deadline: null })).resolves.toMatchObject({
+      ok: true,
+    });
+    await expect(repos.tasks.get(alice, target.id)).resolves.toMatchObject({ title: "Write report" });
   });
 });
 

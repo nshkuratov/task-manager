@@ -23,9 +23,10 @@ export function CreateListDialog({ createList, query, trigger }: CreateListDialo
       description="Give the list a name. You can rename it later."
       submitLabel="Create list"
       pendingLabel="Creating…"
+      placeholder="e.g. Product launch, Home, Reading..."
       trigger={
         trigger ?? (
-          <Button>
+          <Button className="h-11 rounded-full px-5">
             <PlusIcon aria-hidden />
             New list
           </Button>

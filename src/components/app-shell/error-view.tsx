@@ -3,8 +3,10 @@
 import { RotateCwIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
+import { EmptyState } from "@/components/common/empty-state";
 import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
+import { StatePageShell } from "./state-page-shell";
 
 export interface ErrorViewProps {
   onRetry: () => void | Promise<void>;
@@ -18,29 +20,32 @@ export function ErrorView({ onRetry, digest }: ErrorViewProps) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="mx-auto grid max-w-md justify-items-center gap-4 py-12 text-center">
-      <TriangleAlertIcon aria-hidden className="size-10 text-muted-foreground" />
-      <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
-        <p className="text-sm text-muted-foreground">
-          This page could not be loaded. Try again, or go back to your lists.
-        </p>
-      </div>
-      <div className="flex flex-wrap justify-center gap-2">
-        <PendingButton
-          type="button"
-          pending={pending}
-          pendingLabel="Trying again…"
-          idleIcon={<RotateCwIcon aria-hidden />}
-          onClick={() => startTransition(onRetry)}
-        >
-          Try again
-        </PendingButton>
-        <Button asChild variant="outline">
-          <Link href="/lists">Back to lists</Link>
-        </Button>
-      </div>
-      {digest ? <p className="font-mono text-xs text-muted-foreground">Reference: {digest}</p> : null}
-    </div>
+    <StatePageShell>
+      <EmptyState
+        icon={TriangleAlertIcon}
+        titleAs="h1"
+        title="Something went wrong"
+        description="This page could not be loaded. Try again, or go back to your lists."
+        action={
+          <div className="flex flex-wrap justify-center gap-2">
+            <PendingButton
+              type="button"
+              pending={pending}
+              pendingLabel="Trying again…"
+              idleIcon={<RotateCwIcon aria-hidden />}
+              className="h-10 rounded-full px-5"
+              onClick={() => startTransition(onRetry)}
+            >
+              Try again
+            </PendingButton>
+            <Button asChild variant="outline" className="h-10 rounded-full px-5 dark:bg-transparent">
+              <Link href="/lists">Back to lists</Link>
+            </Button>
+          </div>
+        }
+      >
+        {digest ? <p className="font-mono text-xs text-muted-foreground">Reference: {digest}</p> : null}
+      </EmptyState>
+    </StatePageShell>
   );
 }

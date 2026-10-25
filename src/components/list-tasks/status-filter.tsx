@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { Loader2Icon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useOptimistic, useTransition } from "react";
@@ -49,8 +50,7 @@ export function StatusFilter({ selected, counts, onChange }: StatusFilterProps) 
     >
       <Toggle
         variant="outline"
-        size="sm"
-        className={PRESSED}
+        className={cn("h-10 rounded-full border-border bg-background px-5", PRESSED)}
         pressed={optimistic.length === 0}
         onPressedChange={() => {
           if (optimistic.length > 0) change([]);
@@ -61,8 +61,8 @@ export function StatusFilter({ selected, counts, onChange }: StatusFilterProps) 
       <ToggleGroup
         type="multiple"
         variant="outline"
-        size="sm"
         aria-label="Statuses"
+        className="divide-x divide-border rounded-full border border-border bg-background shadow-xs"
         value={[...optimistic]}
         onValueChange={(values) => {
           const chosen = values.filter(isTaskStatus);
@@ -70,9 +70,18 @@ export function StatusFilter({ selected, counts, onChange }: StatusFilterProps) 
         }}
       >
         {TASK_STATUSES.map((status) => (
-          <ToggleGroupItem key={status} value={status} className={PRESSED}>
+          <ToggleGroupItem
+            key={status}
+            value={status}
+            className={cn(
+              "h-10 gap-1.5 border-0 px-4 data-[spacing=0]:first:rounded-l-full data-[spacing=0]:last:rounded-r-full data-[spacing=0]:data-[variant=outline]:first:border-l-0",
+              PRESSED,
+            )}
+          >
             {STATUS_LABELS[status]}
-            <span className="tabular-nums">{counts[status]}</span>
+            <span className="inline-flex size-5 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground tabular-nums">
+              {counts[status]}
+            </span>
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

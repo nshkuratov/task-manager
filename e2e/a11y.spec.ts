@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test as base, type Page } from "@playwright/test";
-import { expect, seededListPath, test } from "./fixtures";
+import { expect, openTaskEdit, seededListPath, test } from "./fixtures";
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21aa"];
 const SCHEMES = ["light", "dark"] as const;
@@ -57,8 +57,8 @@ for (const colorScheme of SCHEMES) {
       const link = page.getByRole("link", { name: "Finalize pricing page copy", exact: true });
       const taskPath = await link.getAttribute("href");
       expect(taskPath).toMatch(/^\/tasks\/[0-9a-f-]{36}$/);
-      await link.click();
-      await expect(page.getByRole("dialog", { name: "Finalize pricing page copy" })).toBeVisible();
+      await openTaskEdit(page, "Finalize pricing page copy");
+      await expect(page.getByRole("dialog", { name: "Edit task" })).toBeVisible();
       await expectNoViolations(page, colorScheme);
 
       await page.goto(taskPath ?? "");

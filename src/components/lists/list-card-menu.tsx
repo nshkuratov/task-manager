@@ -48,7 +48,13 @@ export function ListCardMenu({ list, taskCount, renameList, deleteList, query }:
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button id={triggerId} variant="ghost" size="icon" aria-label={`Actions for “${list.name}”`}>
+          <Button
+            id={triggerId}
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            aria-label={`Actions for “${list.name}”`}
+          >
             <EllipsisIcon aria-hidden />
           </Button>
         </DropdownMenuTrigger>

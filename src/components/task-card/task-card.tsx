@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { ClockIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
 import { DeleteTaskDialog } from "@/components/tasks/delete-task-dialog";
@@ -31,11 +31,17 @@ export interface TaskCardProps {
   onDelete: (input: DeleteTaskInput) => Promise<ActionResult<{ listId: string }>>;
   /** `"page"` renders the title as the view's `h1`; `"none"` when the host (a dialog) titles it. */
   headline?: "page" | "none";
+  /** Keeps page-only task context out of the compact edit dialog. */
+  showMetadata?: boolean;
+  /** Shows the destructive action below the form. */
+  showDeleteAction?: boolean;
   /** After the "Task saved" toast. */
   onSaved?: () => void;
   /** After the delete toast. Defaults to replacing the URL with the task's list, so Back skips the dead card. */
   onDeleted?: (listId: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  /** The dialog's Cancel, rendered by the form next to "Save changes"; the full-page card has none. */
+  formCancel?: ReactNode;
   /**
    * Called synchronously when a save starts and when it settles. Not React state: the form saves inside a
    * transition, so a state update made there would not commit until the save had already finished.
@@ -82,10 +88,13 @@ export function TaskCard({
   onSave,
   onDelete,
   headline = "page",
+  showMetadata = true,
+  showDeleteAction = true,
   onSaved,
   onDeleted,
   onDirtyChange,
   onSavingChange,
+  formCancel,
 }: TaskCardProps) {
   const router = useRouter();
 
@@ -102,29 +111,60 @@ export function TaskCard({
   );
 
   const formatInstant = (date: Date) => formatDeadline(date, { locale: DISPLAY_LOCALE, timeZone, now, showTimeZone });
+  const isStandalonePage = headline === "page";
+  const deleteAction = showDeleteAction ? (
+    <DeleteTaskDialog
+      title={task.title}
+      onDelete={() => onDelete({ id: task.id })}
+      onDeleted={(listId) => {
+        toast.success(`Deleted “${task.title}”`);
+        if (onDeleted) onDeleted(listId);
+        else router.replace(`/lists/${listId}`);
+      }}
+      trigger={
+        <Button variant="outline" className="h-10 rounded-full px-5 text-destructive dark:bg-transparent">
+          <Trash2Icon aria-hidden />
+          Delete task
+        </Button>
+      }
+    />
+  ) : undefined;
 
   return (
-    <div className="grid gap-6">
-      {headline === "page" ? (
+    <div
+      className={cn(
+        "grid gap-6",
+        isStandalonePage &&
+          "rounded-3xl border bg-card/70 p-6 shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm sm:p-8",
+      )}
+    >
+      {isStandalonePage ? (
         <PageHeader title={task.title} description={<DeadlineSummary deadlineInfo={deadlineInfo} />} />
       ) : null}
 
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <dt className="text-muted-foreground">List</dt>
-        <dd className="min-w-0 break-words">
-          <Link href={`/lists/${task.listId}`} className="font-medium underline-offset-4 hover:underline">
-            {listName}
-          </Link>
-        </dd>
-        <dt className="text-muted-foreground">Created</dt>
-        <dd>
-          <time dateTime={task.createdAt.toISOString()}>{formatInstant(task.createdAt)}</time>
-        </dd>
-        <dt className="text-muted-foreground">Updated</dt>
-        <dd>
-          <time dateTime={task.updatedAt.toISOString()}>{formatInstant(task.updatedAt)}</time>
-        </dd>
-      </dl>
+      {showMetadata ? (
+        <dl
+          className={cn(
+            "grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm",
+            isStandalonePage && "w-full max-w-sm rounded-2xl bg-muted/40 p-4",
+          )}
+        >
+          <dt className="text-muted-foreground">List</dt>
+          <dd className="min-w-0 break-words">
+            <Link href={`/lists/${task.listId}`} className="font-medium underline-offset-4 hover:underline">
+              {listName}
+            </Link>
+          </dd>
+          <dt className="text-muted-foreground">Created</dt>
+          <dd>
+            <time dateTime={task.createdAt.toISOString()}>{formatInstant(task.createdAt)}</time>
+          </dd>
+          <dt className="text-muted-foreground">Updated</dt>
+          <dd>
+            <time dateTime={task.updatedAt.toISOString()}>{formatInstant(task.updatedAt)}</time>
+          </dd>
+        </dl>
+      ) : null}
 
       <TaskForm
         mode="edit"
@@ -136,25 +176,9 @@ export function TaskCard({
           onSaved?.();
         }}
         {...(onDirtyChange === undefined ? {} : { onDirtyChange })}
+        {...(formCancel === undefined && deleteAction === undefined ? {} : { cancel: formCancel ?? deleteAction })}
+        spreadActions={isStandalonePage && deleteAction !== undefined}
       />
-
-      <div className="flex justify-start border-t pt-4">
-        <DeleteTaskDialog
-          title={task.title}
-          onDelete={() => onDelete({ id: task.id })}
-          onDeleted={(listId) => {
-            toast.success(`Deleted “${task.title}”`);
-            if (onDeleted) onDeleted(listId);
-            else router.replace(`/lists/${listId}`);
-          }}
-          trigger={
-            <Button variant="outline" className="text-destructive">
-              <Trash2Icon aria-hidden />
-              Delete task
-            </Button>
-          }
-        />
-      </div>
     </div>
   );
 }

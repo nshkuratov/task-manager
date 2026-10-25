@@ -34,7 +34,7 @@ export function DeleteListDialog({
   return (
     <ConfirmDialog
       title={deleteListTitle(name, taskCount)}
-      description="The list and every task in it will be removed. This can’t be undone."
+      description={"The list and every task in it will be removed.\nThis can’t be undone."}
       confirmLabel="Delete list"
       pendingLabel="Deleting…"
       trigger={trigger}

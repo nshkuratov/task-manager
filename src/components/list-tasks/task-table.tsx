@@ -109,24 +109,40 @@ export function TaskTable({
       aria-label={`Tasks in ${listName}`}
       // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a horizontally scrolling region must be focusable to scroll by keyboard (WCAG 2.1.1, axe scrollable-region-focusable)
       tabIndex={0}
-      className="relative w-full overflow-x-auto rounded-lg border focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none"
+      className="relative w-full overflow-x-auto rounded-3xl border bg-card/65 p-2 shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
     >
-      <table className="w-full caption-bottom text-sm">
+      <table className="w-full min-w-[840px] table-fixed border-separate border-spacing-0 caption-bottom text-sm">
         <caption className="sr-only">Tasks in {listName}, sorted by urgency</caption>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead scope="col" className="pl-4">
+        <colgroup>
+          <col className="w-[38%]" />
+          <col className="w-[19%]" />
+          <col className="w-[16%]" />
+          <col className="w-[20%]" />
+          <col className="w-16" />
+        </colgroup>
+        <TableHeader className="[&_tr]:border-0">
+          <TableRow className="border-0 bg-muted/45 hover:bg-muted/45 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl">
+            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
               Title
             </TableHead>
-            <TableHead scope="col">Status</TableHead>
-            <TableHead scope="col">Priority</TableHead>
-            <TableHead scope="col">Deadline</TableHead>
-            <TableHead scope="col" className="w-12 pr-4">
+            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
+              Status
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
+              Priority
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
+              Deadline
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-4">
               <span className="sr-only">Actions</span>
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="[&_tr:last-child>td]:border-b-0">
+          <tr aria-hidden="true">
+            <td colSpan={5} className="h-2 p-0" />
+          </tr>
           {tasks.map((task, index) => (
             <TaskRow
               key={task.id}
@@ -174,23 +190,26 @@ function TaskRow({
   deleteTask: TaskTableProps["deleteTask"];
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const done = task.status === "done";
 
   return (
-    <TableRow onFocus={onFocus} className={cn(overdue && "bg-indicator-overdue/40 hover:bg-indicator-overdue/50")}>
-      <TableCell className="min-w-48 pl-4 whitespace-normal">
-        <Link
+    <TableRow
+      onFocus={onFocus}
+      className={cn(
+        "h-16 border-0 hover:bg-background/70 [&>td]:border-b [&>td]:border-border/40",
+        overdue && "bg-indicator-overdue/40 hover:bg-indicator-overdue/50",
+      )}
+    >
+      <TableCell className="min-w-0 px-4 py-3">
+        <a
           id={titleId}
           href={taskHref(task.id)}
-          className={cn(
-            "rounded-sm font-medium underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none",
-            done && "font-normal text-muted-foreground",
-          )}
+          title={task.title}
+          className="block max-w-full truncate rounded-sm text-base font-medium text-foreground/85 underline-offset-4 hover:underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
         >
           {task.title}
-        </Link>
+        </a>
       </TableCell>
-      <TableCell>
+      <TableCell className="px-4 py-3">
         <StatusSelect
           status={task.status}
           title={task.title}
@@ -201,14 +220,19 @@ function TaskRow({
           }}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="px-4 py-3">
         <PriorityBadge priority={task.priority} />
       </TableCell>
-      <TableCell>{deadline}</TableCell>
-      <TableCell className="pr-4 text-right">
+      <TableCell className="truncate px-4 py-3">{deadline}</TableCell>
+      <TableCell className="px-4 py-3 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${task.title}`}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={`Actions for ${task.title}`}
+            >
               <MoreHorizontalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>

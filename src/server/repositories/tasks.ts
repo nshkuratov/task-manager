@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { Task, TaskStatus } from "@/contracts/task";
 import type { TaskFieldsOutput } from "@/contracts/schemas/tasks";
 import type { Db } from "@/server/db/client";
@@ -57,6 +57,22 @@ export function createTasksRepository(db: Db, now: () => Date) {
         .innerJoin(lists, eq(lists.id, tasks.listId))
         .where(and(eq(tasks.id, taskId), eq(lists.userId, userId)));
       return row === undefined ? null : { ...toTask(row.task), listName: row.listName };
+    },
+
+    /** The list's task with this title (case-insensitive), optionally ignoring one id: the duplicate-title check. */
+    async findByTitle(userId: string, listId: string, title: string, excludeId?: string): Promise<Task | null> {
+      const [row] = await db
+        .select(taskColumns)
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.listId, listId),
+            inArray(tasks.listId, listIdsOf(userId)),
+            eq(sql`lower(${tasks.title})`, title.toLowerCase()),
+            excludeId === undefined ? undefined : ne(tasks.id, excludeId),
+          ),
+        );
+      return row === undefined ? null : toTask(row);
     },
 
     async create(userId: string, listId: string, fields: TaskFieldsOutput): Promise<Task | null> {

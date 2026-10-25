@@ -18,7 +18,7 @@ import { FALLBACK_TIME_ZONE, getRequestNow, getViewerTimeZone } from "@/server/r
 
 export const metadata: Metadata = { title: "Task" };
 
-/** The task card on its own: a hard load or a shared link. Soft navigation from a list opens the modal instead. */
+/** The standalone task page opened from its title or a shared/direct link. The row's Edit action opens the modal. */
 export default async function TaskPage({ params }: PageProps<"/tasks/[taskId]">) {
   const { userId } = await requireSession();
   const { taskId } = await params;
@@ -29,9 +29,9 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[taskId]">)
   const { task, listName, deadlineInfo } = card;
 
   return (
-    <div className="mx-auto grid max-w-2xl gap-6">
+    <div data-app-bg className="mx-auto grid max-w-3xl gap-5 pb-8 sm:pb-10">
       <Breadcrumb>
-        <BreadcrumbList>
+        <BreadcrumbList className="min-w-0 flex-nowrap">
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link href="/lists">Lists</Link>
@@ -47,7 +47,9 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[taskId]">)
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="min-w-0">
-            <BreadcrumbPage className="break-words">{task.title}</BreadcrumbPage>
+            <BreadcrumbPage className="block max-w-64 truncate" title={task.title}>
+              {task.title}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

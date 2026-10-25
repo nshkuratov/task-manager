@@ -35,6 +35,12 @@
   --color-indicator-overdue-foreground: var(--indicator-overdue-foreground);
   --color-indicator-due-soon: var(--indicator-due-soon);
   --color-indicator-due-soon-foreground: var(--indicator-due-soon-foreground);
+  --color-priority-high: var(--priority-high);
+  --color-priority-high-foreground: var(--priority-high-foreground);
+  --color-priority-medium: var(--priority-medium);
+  --color-priority-medium-foreground: var(--priority-medium-foreground);
+  --color-priority-low: var(--priority-low);
+  --color-priority-low-foreground: var(--priority-low-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -72,6 +78,12 @@
   --indicator-overdue-foreground: oklch(0.444 0.177 26.899);
   --indicator-due-soon: oklch(0.973 0.071 103.193);
   --indicator-due-soon-foreground: oklch(0.476 0.114 61.907);
+  --priority-high: oklch(0.936 0.032 17.717);
+  --priority-high-foreground: oklch(0.444 0.177 26.899);
+  --priority-medium: oklch(0.955 0.045 75);
+  --priority-medium-foreground: oklch(0.5 0.11 60);
+  --priority-low: oklch(0.932 0.032 255.585);
+  --priority-low-foreground: oklch(0.424 0.199 265.638);
 }
 
 .dark {
@@ -104,6 +116,12 @@
   --indicator-overdue-foreground: oklch(0.885 0.062 18.334);
   --indicator-due-soon: oklch(0.286 0.066 53.813);
   --indicator-due-soon-foreground: oklch(0.945 0.129 101.54);
+  --priority-high: oklch(0.258 0.092 26.042);
+  --priority-high-foreground: oklch(0.885 0.062 18.334);
+  --priority-medium: oklch(0.28 0.06 65);
+  --priority-medium-foreground: oklch(0.9 0.1 85);
+  --priority-low: oklch(0.282 0.091 267.935);
+  --priority-low-foreground: oklch(0.882 0.059 254.128);
 }
 
 @layer base {
@@ -112,12 +130,28 @@
   }
   html {
     color-scheme: light;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 20%, transparent) transparent;
   }
   html.dark {
     color-scheme: dark;
   }
   body {
     @apply bg-background font-sans text-foreground antialiased;
+  }
+  *::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--foreground) 20%, transparent);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--foreground) 35%, transparent);
   }
 }
 

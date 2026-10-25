@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Toaster } from "@/components/ui/sonner";
 import { ListCard, type ListCardProps } from "./list-card";
-import { SUMMARIES, taskList } from "./story-fixtures";
+import { LIST_IDS, listSummary, SUMMARIES, taskList } from "./story-fixtures";
 
 const meta = {
   title: "Lists/ListCard",
@@ -16,7 +16,7 @@ const meta = {
   },
   decorators: [
     (Story, { globals }) => (
-      <div className="max-w-sm">
+      <div className="@container w-full">
         <Story />
         <Toaster theme={globals.theme === "dark" ? "dark" : "light"} />
       </div>
@@ -96,8 +96,25 @@ export const Empty: Story = {
   },
 };
 
+const LONG_NAME = "jdsaogwjeogjweogjiiiiiiiiiiiiiiiiiiiiiwoegjwoegjoewjgowejgowjegojewogjege";
+
+export const LongName: Story = {
+  name: "A long unbroken name is clipped with an ellipsis and keeps the full name as the hover tooltip",
+  args: {
+    summary: listSummary(LIST_IDS.groceries, LONG_NAME, { new: 0, inProgress: 0, done: 0, overdue: 0 }, "none"),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = canvas.getByRole("heading", { level: 2, name: LONG_NAME });
+    await expect(heading).toHaveAttribute("title", LONG_NAME);
+    // Clipped, not wrapped or overlapping the counters: the text is longer than the box it sits in.
+    await expect(heading.scrollWidth).toBeGreaterThan(heading.clientWidth);
+    await expectCounters(canvasElement, { New: "0", "In progress": "0", Done: "0", Overdue: "0" });
+  },
+};
+
 export const KeyboardOrder: Story = {
-  name: "The card link and the actions menu are separate tab stops",
+  name: "The name link and the actions menu are separate tab stops",
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.tab();

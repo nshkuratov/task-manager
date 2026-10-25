@@ -32,7 +32,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" aria-label="Change theme" disabled>
+      <Button variant="ghost" size="icon" className="rounded-full" aria-label="Change theme" disabled>
         <MonitorIcon aria-hidden />
       </Button>
     );
@@ -45,7 +45,12 @@ export function ThemeToggle() {
     // Non-modal: a modal menu aria-hides the rest of the page, trigger included, while it stays focusable.
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Change theme (current: ${THEME_LABELS[current]})`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label={`Change theme (current: ${THEME_LABELS[current]})`}
+        >
           <CurrentIcon aria-hidden />
         </Button>
       </DropdownMenuTrigger>

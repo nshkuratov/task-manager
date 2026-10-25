@@ -19,6 +19,7 @@ export function SignOutButton({ signOut }: { signOut: SignOutAction }) {
       pending={pending}
       pendingLabel="Signing out…"
       idleIcon={<LogOutIcon aria-hidden />}
+      className="w-full justify-start rounded-lg"
       onClick={() => {
         startTransition(async () => {
           const result = await signOut({});

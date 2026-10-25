@@ -28,6 +28,8 @@ const EXPECTED_ORDER = [
   "Pick a launch date",
   "Set up the status page",
 ];
+const LONG_TITLE =
+  "Coordinate the final international launch readiness review with every regional operations team and stakeholder";
 
 const ok = <T,>(data: T): Promise<ActionResult<T>> => Promise.resolve({ ok: true, data });
 
@@ -124,6 +126,18 @@ export const Sorted: Story = {
       `/tasks/${idOf("Brief the support team")}`,
     );
     await expect(canvas.getByRole("region", { name: "Tasks in Product launch" })).toHaveAttribute("tabindex", "0");
+  },
+};
+
+export const LongTitle: Story = {
+  name: "Long task titles stay inside the title column",
+  args: {
+    tasks: [task({ title: LONG_TITLE, status: "new", priority: "medium", deadline: null })],
+  },
+  play: async ({ canvasElement }) => {
+    const title = within(canvasElement).getByRole("link", { name: LONG_TITLE });
+    await expect(title).toHaveClass("truncate");
+    await expect(title).toHaveAttribute("title", LONG_TITLE);
   },
 };
 

@@ -2,7 +2,6 @@ import { cn } from "cn";
 import { TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { PageHeader } from "@/components/common/page-header";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,7 +28,7 @@ export function ListHeader({ summary: { list, counters }, actions }: ListHeaderP
   ];
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-8">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -44,10 +43,21 @@ export function ListHeader({ summary: { list, counters }, actions }: ListHeaderP
         </BreadcrumbList>
       </Breadcrumb>
 
-      <PageHeader title={list.name} actions={actions} />
+      <div className="relative grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto] sm:items-center sm:gap-x-12 sm:gap-y-16">
+        <h1 className="min-w-0 text-3xl font-semibold tracking-tight break-words sm:col-start-1 sm:row-start-1">
+          {list.name}
+        </h1>
 
-      <div className="grid gap-4 sm:grid-cols-[auto_minmax(12rem,20rem)] sm:items-end sm:justify-between">
-        <dl aria-label="Task counts" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        {actions ? (
+          <div className="flex flex-wrap items-center gap-2 sm:col-start-2 sm:row-start-1 sm:justify-self-end">
+            {actions}
+          </div>
+        ) : null}
+
+        <dl
+          aria-label="Task counts"
+          className="flex flex-wrap gap-x-10 gap-y-2 text-sm sm:col-start-1 sm:row-start-2 sm:self-end"
+        >
           {items.map(({ label, value }) => (
             <div key={label} className="flex items-baseline gap-1.5">
               <dt className="text-muted-foreground">{label}</dt>
@@ -64,10 +74,15 @@ export function ListHeader({ summary: { list, counters }, actions }: ListHeaderP
               {counters.overdue > 0 ? <TriangleAlertIcon aria-hidden className="size-4 self-center" /> : null}
               Overdue
             </dt>
-            <dd className="font-medium tabular-nums">{counters.overdue}</dd>
+            <dd className="self-center font-medium tabular-nums">{counters.overdue}</dd>
           </div>
         </dl>
-        <ListProgress listName={list.name} counters={counters} />
+
+        <ListProgress
+          listName={list.name}
+          counters={counters}
+          className="sm:absolute sm:bottom-0 sm:left-1/2 sm:-translate-x-1/2"
+        />
       </div>
     </div>
   );

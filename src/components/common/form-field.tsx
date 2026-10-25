@@ -61,7 +61,7 @@ export function FieldError({ id, message }: { id: string; message: string | unde
 /** The form-level error above the fields: what no single input can show. Renders nothing without one. */
 export function FormErrorBanner({ message }: { message: string | null }) {
   return message !== null ? (
-    <div role="alert" className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive">
+    <div role="alert" className="rounded-xl border border-destructive px-3 py-2 text-sm font-medium text-destructive">
       {message}
     </div>
   ) : null;

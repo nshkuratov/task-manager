@@ -5,7 +5,7 @@ export function Brand() {
   return (
     <Link
       href="/lists"
-      className="flex items-center gap-2 rounded-md font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
+      className="flex items-center gap-2 rounded-lg font-semibold outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
       <ListChecksIcon aria-hidden className="size-5" />
       Task Manager

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { TaskFacts, TaskList } from "@/contracts/task";
 import type { Db } from "@/server/db/client";
 import { lists, tasks } from "@/server/db/schema";
@@ -59,6 +59,21 @@ export function createListsRepository(db: Db, now: () => Date) {
         .values({ id: crypto.randomUUID(), userId, name, createdAt: at, updatedAt: at })
         .returning(listColumns);
       return toTaskList(row);
+    },
+
+    /** The user's list with this name (case-insensitive), optionally ignoring one id: the duplicate-name check. */
+    async findByName(userId: string, name: string, excludeId?: string): Promise<TaskList | null> {
+      const [row] = await db
+        .select(listColumns)
+        .from(lists)
+        .where(
+          and(
+            eq(lists.userId, userId),
+            eq(sql`lower(${lists.name})`, name.toLowerCase()),
+            excludeId === undefined ? undefined : ne(lists.id, excludeId),
+          ),
+        );
+      return row === undefined ? null : toTaskList(row);
     },
 
     async rename(userId: string, listId: string, name: string): Promise<TaskList | null> {
