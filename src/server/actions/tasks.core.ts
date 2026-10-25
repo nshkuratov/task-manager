@@ -11,11 +11,13 @@ import {
   type Task,
   type UpdateTaskOutput,
 } from "@/contracts";
-import type { Repositories } from "@/server/repositories";
+import { nameKey, type Repositories } from "@/server/repositories";
+import { writeUnlessNameTaken } from "./unique-name";
 
 export const TASK_GONE = "This task no longer exists.";
 export const LIST_GONE = "This list no longer exists.";
 export const TASK_TITLE_TAKEN = "A task with this title already exists in this list.";
+const TITLE_TAKEN = { field: "title", message: TASK_TITLE_TAKEN };
 
 /** What every task handler needs; `defineAction` supplies a superset. */
 export interface TaskHandlerContext<I> {
@@ -40,11 +42,14 @@ export async function createTaskCore({
   userId,
   repos,
 }: TaskHandlerContext<CreateTaskOutput>): Promise<ActionResult<Task>> {
-  if ((await repos.tasks.findByTitle(userId, listId, fields.title)) !== null) {
-    return { ok: false, fieldErrors: { title: [TASK_TITLE_TAKEN] } };
-  }
-  const task = await repos.tasks.create(userId, listId, fields);
-  return task === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: task };
+  return writeUnlessNameTaken(
+    TITLE_TAKEN,
+    () => repos.tasks.isTitleTaken(userId, listId, fields.title),
+    async () => {
+      const task = await repos.tasks.create(userId, listId, fields);
+      return task === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: task };
+    },
+  );
 }
 
 export async function updateTaskCore({
@@ -54,10 +59,13 @@ export async function updateTaskCore({
 }: TaskHandlerContext<UpdateTaskOutput>): Promise<ActionResult<Task>> {
   const task = await repos.tasks.get(userId, id);
   if (task === null) return { ok: false, formError: TASK_GONE };
-  if ((await repos.tasks.findByTitle(userId, task.listId, fields.title, id)) !== null) {
-    return { ok: false, fieldErrors: { title: [TASK_TITLE_TAKEN] } };
-  }
-  return taskResult(await repos.tasks.update(userId, id, fields));
+  // An unchanged title is not re-checked, so a task that already collides (older data) can still be edited.
+  const titleChanged = nameKey(fields.title) !== nameKey(task.title);
+  return writeUnlessNameTaken(
+    TITLE_TAKEN,
+    () => (titleChanged ? repos.tasks.isTitleTaken(userId, task.listId, fields.title, id) : Promise.resolve(false)),
+    async () => taskResult(await repos.tasks.update(userId, id, fields)),
+  );
 }
 
 export async function setTaskStatusCore({

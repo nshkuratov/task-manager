@@ -6,7 +6,7 @@ import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import { parseDbEnv, type DatabaseEnv } from "./env";
 import * as schema from "./schema";
 
-export type Db = LibSQLDatabase<typeof schema>;
+export type Db = LibSQLDatabase<typeof schema> & { $client: Client };
 
 export interface OpenedDb {
   db: Db;

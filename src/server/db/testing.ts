@@ -1,7 +1,7 @@
 import "server-only";
 import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
+import { inject } from "vitest";
 import { openDb, type Db, type OpenedDb } from "./client";
 import { runMigrations } from "./migrate";
 import { users } from "./schema";
@@ -11,22 +11,26 @@ export interface TestDb extends OpenedDb {
   cleanup: () => Promise<void>;
 }
 
+/** A fresh directory under the run's temp root (`src/test/temp-root.ts`), which is deleted when the run ends. */
+export async function makeTestDbDir(prefix: string): Promise<string> {
+  return mkdtemp(path.join(inject("testTmpRoot"), prefix));
+}
+
 /**
- * Best-effort temp-dir removal. On Windows the native binding releases the file handle seconds
- * after close() (measured up to ~9s), so awaiting rm fails with EBUSY or stalls the test hook.
- * Retries run in the background; the dir is removed once the lock clears.
+ * Deletes a temp database directory whose clients are already closed. On Windows libSQL keeps the file
+ * open after `close()` until its native statement handles are garbage-collected, so the delete fails with
+ * EBUSY. Collecting usually releases them (the unit project runs with `--expose-gc`), but an error a failed
+ * statement threw pins its handle for as long as the error is reachable, and vitest keeps rejected errors
+ * past `afterEach`. Such a directory is left for the run's teardown, which deletes it once the worker exits.
  */
-export function removeDirWhenUnlocked(dir: string): Promise<void> {
-  return (async () => {
-    for (let attempt = 0; attempt < 50; attempt++) {
-      try {
-        await rm(dir, { recursive: true, force: true });
-        return;
-      } catch {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-  })();
+export async function removeTestDbDir(dir: string): Promise<void> {
+  if (process.platform === "win32") globalThis.gc?.();
+  try {
+    await rm(dir, { recursive: true, force: true });
+  } catch (error) {
+    const busy = error instanceof Error && "code" in error && error.code === "EBUSY";
+    if (process.platform !== "win32" || !busy) throw error;
+  }
 }
 
 /**
@@ -34,7 +38,7 @@ export function removeDirWhenUnlocked(dir: string): Promise<void> {
  * database exists on one connection only, so anything that opens a second connection sees an empty DB.
  */
 export async function createTestDb(): Promise<TestDb> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "task-manager-db-"));
+  const dir = await makeTestDbDir("task-manager-db-");
   const file = path.join(dir, "test.db");
   const opened = await openDb({ databaseUrl: `file:${file}`, databaseAuthToken: undefined });
   await runMigrations(opened.db);
@@ -43,7 +47,7 @@ export async function createTestDb(): Promise<TestDb> {
     path: file,
     cleanup: async () => {
       opened.client.close();
-      void removeDirWhenUnlocked(dir);
+      await removeTestDbDir(dir);
     },
   };
 }

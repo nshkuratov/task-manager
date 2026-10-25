@@ -7,6 +7,7 @@ import {
   openListMenu,
   openTaskEdit,
   setStatus,
+  taskActionsButton,
   taskTitles,
   test,
   uniqueName,
@@ -115,7 +116,7 @@ test("R-LIST-5, R-LIST-6, R-LIST-7, R-TASKS-2, R-TASKS-3, R-TASKS-4, R-TASKS-5, 
   await test.step("delete a task", async () => {
     await page.goto(listPath);
     await expect(page.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
-    await page.getByRole("button", { name: `Actions for ${undated}`, exact: true }).click();
+    await taskActionsButton(page, undated).click();
     await page.getByRole("menuitem", { name: "Delete", exact: true }).click();
     await page
       .getByRole("alertdialog", { name: `Delete “${undated}”?` })

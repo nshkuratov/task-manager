@@ -1,9 +1,10 @@
 import "server-only";
-import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import type { Task, TaskStatus } from "@/contracts/task";
 import type { TaskFieldsOutput } from "@/contracts/schemas/tasks";
 import type { Db } from "@/server/db/client";
-import { lists, tasks } from "@/server/db/schema";
+import { lists, TASK_TITLE_INDEX, tasks } from "@/server/db/schema";
+import { guardUniqueName, nameKey } from "./duplicate-name";
 import { toDeadlineMs, toTask } from "./mappers";
 
 const taskColumns = {
@@ -59,38 +60,42 @@ export function createTasksRepository(db: Db, now: () => Date) {
       return row === undefined ? null : { ...toTask(row.task), listName: row.listName };
     },
 
-    /** The list's task with this title (case-insensitive), optionally ignoring one id: the duplicate-title check. */
-    async findByTitle(userId: string, listId: string, title: string, excludeId?: string): Promise<Task | null> {
-      const [row] = await db
-        .select(taskColumns)
+    /** Whether another task in the user's list has this title, case-insensitively: the duplicate-title check. */
+    async isTitleTaken(userId: string, listId: string, title: string, excludeId?: string): Promise<boolean> {
+      const rows = await db
+        .select({ title: tasks.title })
         .from(tasks)
         .where(
           and(
             eq(tasks.listId, listId),
             inArray(tasks.listId, listIdsOf(userId)),
-            eq(sql`lower(${tasks.title})`, title.toLowerCase()),
             excludeId === undefined ? undefined : ne(tasks.id, excludeId),
           ),
         );
-      return row === undefined ? null : toTask(row);
+      const key = nameKey(title);
+      return rows.some((row) => nameKey(row.title) === key);
     },
 
     async create(userId: string, listId: string, fields: TaskFieldsOutput): Promise<Task | null> {
       if (!(await ownsList(userId, listId))) return null;
       const at = now().getTime();
-      const [row] = await db
-        .insert(tasks)
-        .values({ id: crypto.randomUUID(), listId, ...writableFields(fields), createdAt: at, updatedAt: at })
-        .returning(taskColumns);
+      const [row] = await guardUniqueName(TASK_TITLE_INDEX, () =>
+        db
+          .insert(tasks)
+          .values({ id: crypto.randomUUID(), listId, ...writableFields(fields), createdAt: at, updatedAt: at })
+          .returning(taskColumns),
+      );
       return toTask(row);
     },
 
     async update(userId: string, taskId: string, fields: TaskFieldsOutput): Promise<Task | null> {
-      const [row] = await db
-        .update(tasks)
-        .set({ ...writableFields(fields), updatedAt: now().getTime() })
-        .where(ownedTask(userId, taskId))
-        .returning(taskColumns);
+      const [row] = await guardUniqueName(TASK_TITLE_INDEX, () =>
+        db
+          .update(tasks)
+          .set({ ...writableFields(fields), updatedAt: now().getTime() })
+          .where(ownedTask(userId, taskId))
+          .returning(taskColumns),
+      );
       return row === undefined ? null : toTask(row);
     },
 

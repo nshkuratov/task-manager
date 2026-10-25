@@ -23,24 +23,32 @@ export interface ListCardProps {
   renameList: RenameListAction;
   deleteList: DeleteListAction;
   query?: string | undefined;
+  /** The viewer's IANA zone, for the "Last updated" time. */
+  timeZone: string;
+  /** Label the zone, for when `timeZone` is the UTC fallback. */
+  showTimeZone: boolean;
 }
 
 /** Only the list name navigates; the card surface and actions remain independent pointer targets. */
-export function ListCard({ summary: { list, counters, indicator }, renameList, deleteList, query }: ListCardProps) {
+export function ListCard({
+  summary: { list, counters, indicator },
+  renameList,
+  deleteList,
+  query,
+  timeZone,
+  showTimeZone,
+}: ListCardProps) {
   const label = progressText(counters);
   return (
     <div
       className={`relative grid items-center gap-5 rounded-3xl border bg-card/65 p-5 text-card-foreground shadow-[0_8px_24px_-16px_color-mix(in_oklab,var(--foreground)_16%,transparent)] @min-[900px]:min-h-28 @min-[900px]:gap-6 ${LIST_ROW_COLUMNS}`}
     >
       <div className="grid min-w-0 gap-2 pr-12 @min-[900px]:pr-0">
-        <h2
-          title={list.name}
-          className="truncate text-lg leading-snug font-medium @min-[1100px]:text-xl"
-        >
+        <h2 title={list.name} className="truncate text-lg leading-snug font-medium @min-[1100px]:text-xl">
           <Link
             id={listLinkId(list.id)}
             href={`/lists/${list.id}`}
-            className="block max-w-full truncate rounded-sm text-foreground/85 underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            className="block max-w-full truncate rounded-sm text-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none"
           >
             {list.name}
           </Link>
@@ -69,7 +77,7 @@ export function ListCard({ summary: { list, counters, indicator }, renameList, d
       </div>
       <div className="text-sm text-muted-foreground">
         <span className="mr-2 @min-[900px]:sr-only">Last updated</span>
-        <ListUpdatedAt date={list.updatedAt} />
+        <ListUpdatedAt date={list.updatedAt} timeZone={timeZone} showTimeZone={showTimeZone} />
       </div>
       <div className="absolute top-4 right-4 flex items-center gap-1 @min-[900px]:static">
         <div className="relative z-10">

@@ -18,6 +18,7 @@ export function createRepositories(db: Db, { now = () => new Date() }: Repositor
 }
 
 export type Repositories = ReturnType<typeof createRepositories>;
+export { DuplicateNameError, nameKey } from "./duplicate-name";
 export type { ListWithTaskFacts } from "./lists";
 export type { UserCredentials, UserIdentity } from "./users";
 

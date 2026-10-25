@@ -16,6 +16,10 @@ export interface ListsViewProps extends ListsSearchProps {
   createList: CreateListAction;
   renameList: RenameListAction;
   deleteList: DeleteListAction;
+  /** The viewer's IANA zone (`getViewerTimeZone()`). */
+  timeZone: string;
+  /** Label times with their zone, for when `timeZone` is the UTC fallback. */
+  showTimeZone: boolean;
 }
 
 const countLabel = (n: number) => `${n} ${n === 1 ? "list" : "lists"}`;
@@ -35,12 +39,14 @@ export function ListsView({
   renameList,
   deleteList,
   onQueryChange,
+  timeZone,
+  showTimeZone,
 }: ListsViewProps) {
   const subtitle = query === undefined ? countLabel(total) : `Showing ${summaries.length} of ${countLabel(total)}`;
 
   return (
-    <div data-wide-page data-app-bg className="grid gap-6 pb-12">
-      <div id={LISTS_HEADER_ID} className="sr-only">
+    <div data-wide-page className="grid gap-6 pb-12">
+      <div id={LISTS_HEADER_ID} className="on-image">
         <PageHeader title="Your lists" description={subtitle} />
       </div>
       {/* Stays mounted across searches, so the outcome of each one is announced when the new results render. */}
@@ -59,7 +65,14 @@ export function ListsView({
           {summaries.length === 0 ? (
             <ListsEmpty kind="no-matches" query={query ?? ""} />
           ) : (
-            <ListGrid summaries={summaries} renameList={renameList} deleteList={deleteList} query={query} />
+            <ListGrid
+              summaries={summaries}
+              renameList={renameList}
+              deleteList={deleteList}
+              query={query}
+              timeZone={timeZone}
+              showTimeZone={showTimeZone}
+            />
           )}
         </>
       )}

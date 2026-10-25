@@ -9,7 +9,7 @@ const LIST_PATH = `/lists/${crypto.randomUUID()}`;
 const meta = {
   title: "ListTasks/TasksEmpty",
   component: TasksEmpty,
-  args: { variant: "empty", action: <Button className="h-10 rounded-full px-5">Add task</Button> },
+  args: { variant: "empty", action: <Button size="pill">Add task</Button> },
   parameters: { nextjs: { appDirectory: true, navigation: { pathname: LIST_PATH } } },
 } satisfies Meta<typeof TasksEmpty>;
 

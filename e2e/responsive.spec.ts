@@ -9,12 +9,16 @@ const VIEWPORTS = [
   { width: 1280, height: 800 },
 ] as const;
 
+/** The document and, in the app frame, the scroll area around `main` (the document itself never scrolls there). */
 async function expectNoPageScroll(page: Page) {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(scrollWidth, "page width").toBeLessThanOrEqual(clientWidth);
+  const scrollers = await page.evaluate(() =>
+    [document.documentElement, document.querySelector("main")?.parentElement].flatMap((element) =>
+      element ? [{ scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }] : [],
+    ),
+  );
+  for (const { scrollWidth, clientWidth } of scrollers) {
+    expect(scrollWidth, "page width").toBeLessThanOrEqual(clientWidth);
+  }
 }
 
 /** Fixed-position dialogs never widen the page, so they are measured against the viewport directly. */

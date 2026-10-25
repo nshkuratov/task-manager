@@ -33,12 +33,12 @@ export function ErrorView({ onRetry, digest }: ErrorViewProps) {
               pending={pending}
               pendingLabel="Trying again…"
               idleIcon={<RotateCwIcon aria-hidden />}
-              className="h-10 rounded-full px-5"
+              size="pill"
               onClick={() => startTransition(onRetry)}
             >
               Try again
             </PendingButton>
-            <Button asChild variant="outline" className="h-10 rounded-full px-5 dark:bg-transparent">
+            <Button asChild variant="outline" size="pill">
               <Link href="/lists">Back to lists</Link>
             </Button>
           </div>

@@ -1,11 +1,13 @@
 "use client";
 
+import { cn } from "cn";
 import { useRouter } from "next/navigation";
 import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TASK_NOT_FOUND_DESCRIPTION } from "./not-found-copy";
 import { TaskCard, type TaskCardProps } from "./task-card";
 
 /**
@@ -35,6 +37,15 @@ let modalOpener: HTMLElement | null = null;
 let replacingFrame = false;
 
 /**
+ * A menu item that opened the frame unmounts with its menu, so focus must return to the menu's trigger instead.
+ * Radix labels a menu with its trigger's id.
+ */
+function menuTriggerOf(element: HTMLElement): HTMLElement {
+  const triggerId = element.closest('[role="menu"]')?.getAttribute("aria-labelledby");
+  return (triggerId ? document.getElementById(triggerId) : null) ?? element;
+}
+
+/**
  * Always open: it disappears when `router.back()` changes the route and the slot stops rendering it, so there is
  * no local closed state to fall out of sync with the URL.
  */
@@ -57,7 +68,7 @@ function ModalFrame({
     const inDialog = active instanceof HTMLElement && active.closest('[role="dialog"]') !== null;
     if (!replacingFrame && !inDialog) {
       // Nothing focused (Safari does not focus a clicked link): forget the last opener rather than return to it.
-      modalOpener = active instanceof HTMLElement && active !== document.body ? active : null;
+      modalOpener = active instanceof HTMLElement && active !== document.body ? menuTriggerOf(active) : null;
     }
     return () => {
       replacingFrame = true;
@@ -72,7 +83,6 @@ function ModalFrame({
       <DialogContent
         showCloseButton={false}
         {...(description === undefined ? { "aria-describedby": undefined } : {})}
-        className="max-h-[calc(100dvh-2rem)] gap-5 overflow-y-auto rounded-3xl p-6 sm:max-w-[450px]"
         // A modal Radix dialog returns focus only to its Trigger; opened by a route, it has none, and focus would
         // drop to <body>. An opener removed meanwhile keeps that default.
         onCloseAutoFocus={(event) => {
@@ -82,9 +92,7 @@ function ModalFrame({
         }}
       >
         <DialogHeader>
-          <DialogTitle className={titleClassName ?? "text-xl leading-7 font-medium tracking-tight break-words"}>
-            {title}
-          </DialogTitle>
+          <DialogTitle className={cn("break-words", titleClassName)}>{title}</DialogTitle>
           {description === undefined ? null : <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
@@ -95,14 +103,7 @@ function ModalFrame({
 
 export type TaskCardDialogProps = Omit<
   TaskCardProps,
-  | "headline"
-  | "showMetadata"
-  | "showDeleteAction"
-  | "onSaved"
-  | "onDeleted"
-  | "onDirtyChange"
-  | "onSavingChange"
-  | "formCancel"
+  "headline" | "onSaved" | "onDeleted" | "onDirtyChange" | "onSavingChange" | "formCancel"
 >;
 
 /** The task card over its list. Closing with unsaved edits asks first; closing after a save does not. */
@@ -133,17 +134,11 @@ export function TaskCardDialog(props: TaskCardDialogProps) {
       <TaskCard
         {...props}
         headline="none"
-        showDeleteAction={false}
         // The form's dirty flag reaches this component a render after its reset, so these must not use the guard.
         onSaved={close}
         onDirtyChange={setDirty}
         formCancel={
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 rounded-full px-5 dark:bg-transparent"
-            onClick={requestClose}
-          >
+          <Button type="button" variant="outline" size="pill" onClick={requestClose}>
             Cancel
           </Button>
         }
@@ -176,7 +171,7 @@ export function TaskCardDialogSkeleton() {
     <ModalFrame
       title="Loading task…"
       description="Fetching the latest details."
-      titleClassName="text-xl leading-7 font-medium tracking-tight text-muted-foreground"
+      titleClassName="text-muted-foreground"
       onOpenChange={(open) => {
         if (!open) close();
       }}
@@ -196,13 +191,13 @@ export function TaskNotFoundDialog() {
   return (
     <ModalFrame
       title="Task not found"
-      description="This task doesn't exist or was deleted."
+      description={TASK_NOT_FOUND_DESCRIPTION}
       onOpenChange={(open) => {
         if (!open) close();
       }}
     >
       <div className="flex justify-end">
-        <Button className="h-10 rounded-full px-5" onClick={close}>
+        <Button size="pill" onClick={close}>
           Back to the list
         </Button>
       </div>

@@ -9,7 +9,7 @@ const meta = {
   args: {
     title: "Your lists",
     description: "Every list with its progress and what is overdue.",
-    actions: <Button className="h-11 rounded-full px-5">New list</Button>,
+    actions: <Button size="pill-lg">New list</Button>,
   },
 } satisfies Meta<typeof PageHeader>;
 

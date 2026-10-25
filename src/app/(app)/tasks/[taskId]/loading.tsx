@@ -1,19 +1,18 @@
+import { cn } from "cn";
+import { TASK_CARD_PANEL, TASK_METADATA_BOX, TASK_PAGE_FRAME } from "@/components/task-card/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TaskLoading() {
   return (
-    <div data-app-bg role="status" className="mx-auto grid max-w-3xl gap-5 pb-8 sm:pb-10">
+    <div role="status" className={TASK_PAGE_FRAME}>
       <span className="sr-only">Loading task…</span>
       <Skeleton aria-hidden className="h-4 w-56" />
-      <div
-        aria-hidden
-        className="grid gap-6 rounded-3xl border bg-card/70 p-6 shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm sm:p-8"
-      >
+      <div aria-hidden className={cn("grid gap-6", TASK_CARD_PANEL)}>
         <div className="grid gap-2">
           <Skeleton className="h-9 w-72 max-w-full" />
           <Skeleton className="h-4 w-32" />
         </div>
-        <div className="grid w-full max-w-sm gap-2 rounded-2xl bg-muted/40 p-4">
+        <div className={cn("grid gap-2", TASK_METADATA_BOX)}>
           <Skeleton className="h-4 w-48" />
           <Skeleton className="h-4 w-56" />
           <Skeleton className="h-4 w-52" />

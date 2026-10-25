@@ -1,0 +1,7 @@
+# Check out text files with LF on every OS: Prettier enforces LF, and Windows' core.autocrlf=true would
+# otherwise convert the working tree to CRLF and fail format:check.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary

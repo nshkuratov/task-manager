@@ -11,7 +11,7 @@ export function ListsToolbar({
   query?: string | undefined;
 } & ListsSearchProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="on-image flex flex-wrap items-center justify-between gap-3">
       <ListsSearch {...(onQueryChange === undefined ? {} : { onQueryChange })} />
       <CreateListDialog createList={createList} query={query} />
     </div>

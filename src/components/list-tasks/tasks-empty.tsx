@@ -54,7 +54,7 @@ function FilteredEmpty({
       action={
         <Button
           variant="outline"
-          className="h-10 rounded-full px-5 dark:bg-transparent"
+          size="pill"
           aria-busy={pending || undefined}
           onClick={() => {
             startTransition(() => {

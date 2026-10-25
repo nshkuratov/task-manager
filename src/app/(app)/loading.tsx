@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AppLoading() {
   return (
-    <div data-app-bg role="status" className="grid gap-6">
+    <div role="status" className="grid gap-6">
       <span className="sr-only">Loading…</span>
       <div aria-hidden className="grid gap-2">
         <Skeleton className="h-8 w-48" />

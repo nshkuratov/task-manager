@@ -1,19 +1,21 @@
-import { mkdtemp } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { removeDirWhenUnlocked } from "@/server/db/testing";
+import type { Db } from "@/server/db/client";
+import { makeTestDbDir, removeTestDbDir } from "@/server/db/testing";
 
 let dir: string;
+// The module-cached database a test opened on a file in `dir`; Windows cannot delete the file until it is closed.
+let opened: Db | undefined;
 
 beforeEach(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), "task-manager-repos-"));
+  dir = await makeTestDbDir("task-manager-repos-");
   vi.resetModules();
 });
-afterEach(() => {
+afterEach(async () => {
+  opened?.$client.close();
+  opened = undefined;
   vi.unstubAllEnvs();
-  // The client opened through getDb() has no close handle here; removal rides out the Windows lock.
-  void removeDirWhenUnlocked(dir);
+  await removeTestDbDir(dir);
 });
 
 describe("getRepositories", () => {
@@ -22,7 +24,8 @@ describe("getRepositories", () => {
     const { getRepositories } = await import("@/server/repositories");
     const { getDb } = await import("@/server/db/client");
     const { runMigrations } = await import("@/server/db/migrate");
-    await runMigrations(await getDb());
+    opened = await getDb();
+    await runMigrations(opened);
 
     const first = await getRepositories();
     expect(await getRepositories()).toBe(first);
@@ -32,9 +35,11 @@ describe("getRepositories", () => {
   it("does not cache a failed open, so the next call retries", async () => {
     vi.stubEnv("DATABASE_URL", "postgres://wrong");
     const { getRepositories } = await import("@/server/repositories");
+    const { getDb } = await import("@/server/db/client");
     await expect(getRepositories()).rejects.toThrow(/DATABASE_URL must start with/);
 
     vi.stubEnv("DATABASE_URL", `file:${path.join(dir, "app.db")}`);
     await expect(getRepositories()).resolves.toBeDefined();
+    opened = await getDb();
   });
 });

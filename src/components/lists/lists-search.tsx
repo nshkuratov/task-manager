@@ -69,7 +69,7 @@ export function ListsSearch({ onQueryChange }: ListsSearchProps) {
         type="search"
         autoComplete="off"
         placeholder="Search lists"
-        className="rounded-full pr-8 pl-8 focus-visible:ring-1"
+        className="h-9 rounded-full pr-8 pl-8"
         value={value}
         aria-busy={pending || undefined}
         onChange={(event) => {

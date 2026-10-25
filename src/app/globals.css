@@ -4,6 +4,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  /* The redesign's two elevations: glass panels (cards, tables, empty states) and floating menus. */
+  --shadow-panel: 0 16px 48px -24px color-mix(in oklab, var(--foreground) 20%, transparent);
+  --shadow-popover: 0 12px 32px -16px color-mix(in oklab, var(--foreground) 30%, transparent);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-background: var(--background);
@@ -124,6 +127,31 @@
   --priority-low-foreground: oklch(0.882 0.059 254.128);
 }
 
+/* Longhands, so it layers over a `bg-background` colour instead of resetting it. */
+@utility bg-app-image {
+  background-image: url("/images/app-background.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  &:where(.dark, .dark *) {
+    background-image: url("/images/app-background-dark.webp");
+  }
+}
+
+/*
+ * Text and focus rings placed straight on the background image. The default tokens fall below AA against the
+ * image's brightest pixels (dark muted text 2.1:1); these keep muted and overdue text at 4.5:1 and the ring at 3:1 in
+ * both themes. Wrap text and controls that sit directly on the image, not cards (they keep their own surface).
+ */
+.on-image {
+  --muted-foreground: oklch(0.5 0 0);
+}
+.dark .on-image {
+  --muted-foreground: oklch(0.94 0 0);
+  --ring: oklch(0.85 0 0);
+  --indicator-overdue-foreground: oklch(0.95 0.035 18.334);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring;
@@ -131,7 +159,7 @@
   html {
     color-scheme: light;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--foreground) 20%, transparent) transparent;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 45%, transparent) transparent;
   }
   html.dark {
     color-scheme: dark;
@@ -140,18 +168,19 @@
     @apply bg-background font-sans text-foreground antialiased;
   }
   *::-webkit-scrollbar {
-    width: 3px;
-    height: 3px;
+    width: 8px;
+    height: 8px;
   }
   *::-webkit-scrollbar-track {
     background: transparent;
   }
+  /* 45% reaches 3:1 against the background in both themes, so the page's only scrollbar can be seen. */
   *::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-    background-color: color-mix(in oklab, var(--foreground) 20%, transparent);
+    background-color: color-mix(in oklab, var(--foreground) 45%, transparent);
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in oklab, var(--foreground) 35%, transparent);
+    background-color: color-mix(in oklab, var(--foreground) 60%, transparent);
   }
 }
 

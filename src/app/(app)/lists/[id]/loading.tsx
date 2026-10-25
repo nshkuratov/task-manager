@@ -1,3 +1,4 @@
+import { LIST_HEADER_GRID } from "@/components/list-tasks/list-header";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -8,7 +9,6 @@ export default function ListTasksLoading() {
   return (
     <div
       role="status"
-      data-app-bg
       data-wide-page
       data-slot="list-tasks-loading"
       className="grid gap-6 [[data-slot=list-tasks-loading]~&]:hidden"
@@ -16,7 +16,7 @@ export default function ListTasksLoading() {
       <span className="sr-only">Loading tasks…</span>
       <div aria-hidden className="grid gap-8">
         <Skeleton className="h-4 w-40" />
-        <div className="relative grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto] sm:items-center sm:gap-x-12 sm:gap-y-16">
+        <div className={LIST_HEADER_GRID}>
           <Skeleton className="h-9 w-56 max-w-full sm:col-start-1 sm:row-start-1" />
           <Skeleton className="h-11 w-32 rounded-full sm:col-start-2 sm:row-start-1 sm:justify-self-end" />
           <Skeleton className="h-5 w-96 max-w-full sm:col-start-1 sm:row-start-2" />

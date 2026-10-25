@@ -88,9 +88,6 @@ const SUBMIT_LABELS = {
   edit: { idle: "Save changes", pending: "Saving…" },
 } as const;
 
-const ABSOLUTE_ERROR =
-  "relative [&>[role=alert]]:absolute [&>[role=alert]]:inset-x-0 [&>[role=alert]]:top-full [&>[role=alert]]:mt-0.5 [&>[role=alert]]:text-xs [&>[role=alert]]:leading-4";
-
 export function TaskForm({
   mode,
   timeZone,
@@ -150,7 +147,7 @@ export function TaskForm({
   return (
     <form
       noValidate
-      className="relative grid gap-5"
+      className="grid gap-5"
       onSubmit={(event) => {
         if (blocked) {
           event.preventDefault();
@@ -159,24 +156,17 @@ export function TaskForm({
         void submit(event);
       }}
     >
-      <div className="absolute inset-x-0 top-full mt-1">
-        <FormErrorBanner message={formError} />
-      </div>
+      <FormErrorBanner message={formError} />
 
-      <FormField label="Title" error={errors.title?.message} className={ABSOLUTE_ERROR}>
-        <Input
-          autoComplete="off"
-          readOnly={pending}
-          className="h-10 rounded-xl px-3 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1"
-          {...register("title")}
-        />
+      <FormField label="Title" error={errors.title?.message}>
+        <Input autoComplete="off" readOnly={pending} {...register("title")} />
       </FormField>
 
-      <FormField label="Description" error={errors.description?.message} className={ABSOLUTE_ERROR}>
+      <FormField label="Description" error={errors.description?.message}>
         <Textarea
           rows={3}
           readOnly={pending}
-          className="field-sizing-fixed h-20 min-h-20 max-h-20 resize-none overflow-y-auto rounded-xl px-3 py-2.5 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1"
+          className="field-sizing-fixed h-20 max-h-20 min-h-20 resize-none overflow-y-auto"
           {...register("description")}
         />
       </FormField>
@@ -241,7 +231,7 @@ export function TaskForm({
           pending={pending}
           pendingLabel={labels.pending}
           aria-disabled={blocked || undefined}
-          className="h-10 rounded-full px-5"
+          size="pill"
         >
           {labels.idle}
         </PendingButton>
@@ -278,7 +268,7 @@ function ChoiceField<T extends string>({
   const id = useId();
   const errorId = `${id}-error`;
   return (
-    <div className={`grid gap-2 ${ABSOLUTE_ERROR}`}>
+    <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
       <Select
         value={value}
@@ -291,7 +281,7 @@ function ChoiceField<T extends string>({
         <SelectTrigger
           ref={triggerRef}
           id={id}
-          className="w-full rounded-xl px-3 shadow-none focus-visible:border-transparent aria-invalid:border-transparent aria-invalid:ring-1 data-[size=default]:h-10"
+          className="w-full"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
           onBlur={onBlur}

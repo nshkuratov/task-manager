@@ -6,9 +6,18 @@ import { PRIORITY_LABELS, type TaskPriority } from "@/contracts";
 // Priority reads through colour (soft tinted fill, calm foreground) plus the icon; the border is the
 // foreground at low alpha, so each badge's outline stays in its own hue.
 const STYLES: Record<TaskPriority, { icon: LucideIcon; className: string }> = {
-  high: { icon: ChevronsUpIcon, className: "border-priority-high-foreground/20 bg-priority-high text-priority-high-foreground" },
-  medium: { icon: EqualIcon, className: "border-priority-medium-foreground/20 bg-priority-medium text-priority-medium-foreground" },
-  low: { icon: ChevronsDownIcon, className: "border-priority-low-foreground/20 bg-priority-low text-priority-low-foreground" },
+  high: {
+    icon: ChevronsUpIcon,
+    className: "border-priority-high-foreground/20 bg-priority-high text-priority-high-foreground",
+  },
+  medium: {
+    icon: EqualIcon,
+    className: "border-priority-medium-foreground/20 bg-priority-medium text-priority-medium-foreground",
+  },
+  low: {
+    icon: ChevronsDownIcon,
+    className: "border-priority-low-foreground/20 bg-priority-low text-priority-low-foreground",
+  },
 };
 
 export function PriorityBadge({ priority, className }: { priority: TaskPriority; className?: string }) {

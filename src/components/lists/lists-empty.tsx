@@ -29,7 +29,7 @@ export function ListsEmpty(props: ListsEmptyProps) {
       title={`No lists match “${props.query}”`}
       description="Check the spelling or try a shorter search."
       action={
-        <Button asChild variant="outline" className="h-10 rounded-full px-5 dark:bg-transparent">
+        <Button asChild variant="outline" size="pill">
           <Link href="/lists">Clear search</Link>
         </Button>
       }

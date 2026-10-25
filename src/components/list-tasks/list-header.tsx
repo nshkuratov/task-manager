@@ -19,6 +19,10 @@ export interface ListHeaderProps {
   actions?: ReactNode;
 }
 
+/** Shared with the list page's loading skeleton, so the two keep the same layout. */
+export const LIST_HEADER_GRID =
+  "relative grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto] sm:items-center sm:gap-x-12 sm:gap-y-16";
+
 /** The list page's headline: where you are, the list name, and how far along it is. */
 export function ListHeader({ summary: { list, counters }, actions }: ListHeaderProps) {
   const items = [
@@ -28,7 +32,7 @@ export function ListHeader({ summary: { list, counters }, actions }: ListHeaderP
   ];
 
   return (
-    <div className="grid gap-8">
+    <div className="on-image grid gap-8">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -43,7 +47,7 @@ export function ListHeader({ summary: { list, counters }, actions }: ListHeaderP
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="relative grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto] sm:items-center sm:gap-x-12 sm:gap-y-16">
+      <div className={LIST_HEADER_GRID}>
         <h1 className="min-w-0 text-3xl font-semibold tracking-tight break-words sm:col-start-1 sm:row-start-1">
           {list.name}
         </h1>

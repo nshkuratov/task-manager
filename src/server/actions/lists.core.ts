@@ -11,6 +11,7 @@ import {
 } from "@/contracts";
 import type { Repositories } from "@/server/repositories";
 import { LIST_GONE } from "./tasks.core";
+import { writeUnlessNameTaken } from "./unique-name";
 
 /** What every list handler needs; `defineAction` supplies a superset. */
 export interface ListHandlerContext<I> {
@@ -23,16 +24,18 @@ export interface ListHandlerContext<I> {
 export const listPaths = (listId: string): string[] => ["/lists", `/lists/${listId}`];
 
 export const LIST_NAME_TAKEN = "A list with this name already exists.";
+const NAME_TAKEN = { field: "name", message: LIST_NAME_TAKEN };
 
 export async function createListCore({
   input,
   userId,
   repos,
 }: ListHandlerContext<CreateListOutput>): Promise<ActionResult<TaskList>> {
-  if ((await repos.lists.findByName(userId, input.name)) !== null) {
-    return { ok: false, fieldErrors: { name: [LIST_NAME_TAKEN] } };
-  }
-  return { ok: true, data: await repos.lists.create(userId, input.name) };
+  return writeUnlessNameTaken(
+    NAME_TAKEN,
+    () => repos.lists.isNameTaken(userId, input.name),
+    async () => ({ ok: true, data: await repos.lists.create(userId, input.name) }),
+  );
 }
 
 // A missing list and another user's list get the same answer, so ids reveal nothing about other accounts.
@@ -41,11 +44,14 @@ export async function renameListCore({
   userId,
   repos,
 }: ListHandlerContext<RenameListOutput>): Promise<ActionResult<TaskList>> {
-  if ((await repos.lists.findByName(userId, input.name, input.id)) !== null) {
-    return { ok: false, fieldErrors: { name: [LIST_NAME_TAKEN] } };
-  }
-  const list = await repos.lists.rename(userId, input.id, input.name);
-  return list === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: list };
+  return writeUnlessNameTaken(
+    NAME_TAKEN,
+    () => repos.lists.isNameTaken(userId, input.name, input.id),
+    async () => {
+      const list = await repos.lists.rename(userId, input.id, input.name);
+      return list === null ? { ok: false, formError: LIST_GONE } : { ok: true, data: list };
+    },
+  );
 }
 
 export async function deleteListCore({

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TaskFieldsOutput } from "@/contracts/schemas/tasks";
 import { lists, tasks } from "@/server/db/schema";
 import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
-import { createRepositories, type Repositories } from "@/server/repositories";
+import { createRepositories, DuplicateNameError, type Repositories } from "@/server/repositories";
 
 const START = new Date("2026-10-22T12:00:00Z");
 let clock: Date;
@@ -143,5 +143,28 @@ describe("lists repository", () => {
     const created = await repos.lists.create(alice, "Raw");
     const [row] = await testDb.db.select({ createdAt: lists.createdAt }).from(lists).where(eq(lists.id, created.id));
     expect(row?.createdAt).toBe(START.getTime());
+  });
+});
+
+describe("lists repository: duplicate names", () => {
+  it("R-LIST-5: finds a taken name case-insensitively in any script, scoped to the user", async () => {
+    const groceries = await repos.lists.create(alice, "Покупки");
+    await repos.lists.create(alice, "École");
+
+    for (const name of ["Покупки", "покупки", "ПОКУПКИ", "école", "ÉCOLE"]) {
+      expect(await repos.lists.isNameTaken(alice, name)).toBe(true);
+    }
+    expect(await repos.lists.isNameTaken(alice, "Работа")).toBe(false);
+    expect(await repos.lists.isNameTaken(bob, "Покупки")).toBe(false);
+    expect(await repos.lists.isNameTaken(alice, "покупки", groceries.id)).toBe(false);
+  });
+
+  it("R-LIST-5: the database rejects a duplicate the check missed with a typed error", async () => {
+    const list = await repos.lists.create(alice, "Groceries");
+    await repos.lists.create(alice, "Work");
+
+    await expect(repos.lists.create(alice, "GROCERIES")).rejects.toBeInstanceOf(DuplicateNameError);
+    await expect(repos.lists.rename(alice, list.id, "work")).rejects.toBeInstanceOf(DuplicateNameError);
+    await expect(repos.lists.create(bob, "Groceries")).resolves.toMatchObject({ name: "Groceries" });
   });
 });

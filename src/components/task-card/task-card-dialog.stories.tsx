@@ -9,6 +9,7 @@ import {
   TaskNotFoundDialog,
   type TaskCardDialogProps,
 } from "./task-card-dialog";
+import { TASK_NOT_FOUND_DESCRIPTION } from "./not-found-copy";
 
 const LIST_ID = "8d1f2a4e-5b6c-4d7e-8f90-a1b2c3d4e5f6";
 const TASK: Task = {
@@ -62,10 +63,7 @@ export const Opens: Story = {
   play: async () => {
     const dialog = await openDialog();
     await expect(within(dialog).getByRole("textbox", { name: "Title" })).toHaveValue("Write report");
-    await expect(within(dialog).getByRole("link", { name: "Work" })).toHaveAttribute(
-      "href",
-      `/lists/${LIST_ID}`,
-    );
+    await expect(within(dialog).getByRole("link", { name: "Work" })).toHaveAttribute("href", `/lists/${LIST_ID}`);
     await expect(within(dialog).queryByRole("button", { name: "Delete task" })).toBeNull();
   },
 };
@@ -89,6 +87,20 @@ export const DirtyClose: Story = {
     await userEvent.keyboard("{Escape}");
     const again = await page().findByRole("alertdialog", { name: "Discard unsaved changes?" });
     await userEvent.click(within(again).getByRole("button", { name: "Discard changes" }));
+    await waitFor(() => expect(getRouter().back).toHaveBeenCalledOnce());
+  },
+};
+
+export const CancelAsks: Story = {
+  name: "R-TEST-1: Cancel with unsaved edits asks first, like Escape; Discard goes back once",
+  play: async () => {
+    const dialog = await openDialog();
+    await userEvent.type(within(dialog).getByRole("textbox", { name: "Description" }), " and the auditors");
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    const confirm = await page().findByRole("alertdialog", { name: "Discard unsaved changes?" });
+    await expect(getRouter().back).not.toHaveBeenCalled();
+    await userEvent.click(within(confirm).getByRole("button", { name: "Discard changes" }));
     await waitFor(() => expect(getRouter().back).toHaveBeenCalledOnce());
   },
 };
@@ -175,7 +187,7 @@ export const NotFound: Story = {
   render: () => <TaskNotFoundDialog />,
   play: async () => {
     const dialog = await page().findByRole("dialog", { name: "Task not found" });
-    await expect(dialog).toHaveAccessibleDescription("This task doesn't exist or was deleted.");
+    await expect(dialog).toHaveAccessibleDescription(TASK_NOT_FOUND_DESCRIPTION);
     await userEvent.click(within(dialog).getByRole("button", { name: "Back to the list" }));
     await userEvent.keyboard("{Escape}");
     await expect(getRouter().back).toHaveBeenCalledOnce();

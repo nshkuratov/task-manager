@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TaskList } from "@/contracts";
+import type { TaskFieldsOutput, TaskList } from "@/contracts";
 import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
 import { createRepositories, type Repositories } from "@/server/repositories";
 import { createActionRunner } from "./define-action";
@@ -35,6 +35,13 @@ function buildActions() {
 }
 
 const tasksInList = async () => (await repos.tasks.listForList(alice, list.id)) ?? [];
+const fields = (title: string): TaskFieldsOutput => ({
+  title,
+  description: "",
+  status: "new",
+  priority: "medium",
+  deadline: null,
+});
 
 async function aliceTask(title = "Write report") {
   const result = await actions.createTask({ listId: list.id, title, deadline: null });
@@ -132,9 +139,35 @@ describe("createTask", () => {
     const other = await repos.lists.create(alice, "Home");
     await aliceTask("Write report");
 
-    await expect(actions.createTask({ listId: other.id, title: "Write report", deadline: null })).resolves.toMatchObject(
-      { ok: true },
-    );
+    await expect(
+      actions.createTask({ listId: other.id, title: "Write report", deadline: null }),
+    ).resolves.toMatchObject({ ok: true });
+  });
+
+  it("R-TASKS-2: rejects a non-ASCII duplicate, exact or in another case", async () => {
+    await aliceTask("Отчёт");
+
+    for (const title of ["Отчёт", "отчёт", "ОТЧЁТ"]) {
+      await expect(actions.createTask({ listId: list.id, title, deadline: null })).resolves.toEqual({
+        ok: false,
+        fieldErrors: { title: [TASK_TITLE_TAKEN] },
+      });
+    }
+    await expect(tasksInList()).resolves.toHaveLength(1);
+  });
+
+  it("R-TASKS-2: a duplicate that passes the check in a race is still a field error, not a crash", async () => {
+    await aliceTask("Write report");
+    // Stubbed: a concurrent submit cannot be made deterministic in-process, so the pre-check is told the title is
+    // free and the database's unique index has to catch it.
+    repos = { ...repos, tasks: { ...repos.tasks, isTitleTaken: () => Promise.resolve(false) } };
+    actions = buildActions();
+
+    await expect(actions.createTask({ listId: list.id, title: "write report", deadline: null })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { title: [TASK_TITLE_TAKEN] },
+    });
+    await expect(tasksInList()).resolves.toHaveLength(1);
   });
 });
 
@@ -188,6 +221,27 @@ describe("updateTask", () => {
       ok: true,
     });
     await expect(repos.tasks.get(alice, target.id)).resolves.toMatchObject({ title: "Write report" });
+  });
+
+  it("R-TASKS-3: a title only another list has is not a conflict", async () => {
+    const target = await aliceTask("Write report");
+    const other = await repos.lists.create(alice, "Home");
+    await repos.tasks.create(alice, other.id, fields("Book flights"));
+
+    await expect(actions.updateTask({ id: target.id, title: "Book flights", deadline: null })).resolves.toMatchObject({
+      ok: true,
+    });
+  });
+
+  it("R-TASKS-3: editing other fields of a task whose unchanged title already collides still saves", async () => {
+    // Rows from before the duplicate rule, or a Unicode case variant the ASCII-only index lets through.
+    const target = await repos.tasks.create(alice, list.id, fields("Отчёт"));
+    await repos.tasks.create(alice, list.id, fields("отчёт"));
+    if (target === null) throw new Error("test setup");
+
+    await expect(
+      actions.updateTask({ id: target.id, title: "Отчёт", description: "Q3 numbers", deadline: null }),
+    ).resolves.toMatchObject({ ok: true, data: { description: "Q3 numbers" } });
   });
 });
 

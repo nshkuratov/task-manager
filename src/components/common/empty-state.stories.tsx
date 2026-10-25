@@ -9,7 +9,7 @@ const meta = {
   args: {
     title: "No lists yet",
     description: "Create a list to start tracking tasks.",
-    action: <Button className="h-10 rounded-full px-5">New list</Button>,
+    action: <Button size="pill">New list</Button>,
   },
 } satisfies Meta<typeof EmptyState>;
 

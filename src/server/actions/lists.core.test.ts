@@ -107,6 +107,33 @@ describe("createList", () => {
     expect(revalidate).not.toHaveBeenCalled();
   });
 
+  it("R-LIST-5: rejects a non-ASCII duplicate, exact or in another case", async () => {
+    await aliceList("Покупки");
+    await aliceList("École");
+
+    for (const name of ["Покупки", "покупки", "ПОКУПКИ", "école"]) {
+      await expect(actions.createList({ name })).resolves.toEqual({
+        ok: false,
+        fieldErrors: { name: [LIST_NAME_TAKEN] },
+      });
+    }
+    await expect(repos.lists.listWithTaskFacts(alice)).resolves.toHaveLength(2);
+  });
+
+  it("R-LIST-5: a duplicate that passes the check in a race is still a field error, not a crash", async () => {
+    await aliceList("Groceries");
+    // Stubbed: a concurrent submit cannot be made deterministic in-process, so the pre-check is told the name is free
+    // and the database's unique index has to catch it.
+    repos = { ...repos, lists: { ...repos.lists, isNameTaken: () => Promise.resolve(false) } };
+    actions = buildActions();
+
+    await expect(actions.createList({ name: "groceries" })).resolves.toEqual({
+      ok: false,
+      fieldErrors: { name: [LIST_NAME_TAKEN] },
+    });
+    await expect(repos.lists.listWithTaskFacts(alice)).resolves.toHaveLength(1);
+  });
+
   it("R-LIST-5: the same name for another user is not a conflict", async () => {
     await aliceList("Groceries");
     sessionUser = bob;
@@ -150,6 +177,13 @@ describe("renameList", () => {
     });
     await expect(actions.renameList({ id: list.id, name: "Groceries" })).resolves.toMatchObject({ ok: true });
     await expect(repos.lists.get(alice, list.id)).resolves.toMatchObject({ name: "Groceries" });
+  });
+
+  it("R-LIST-6: changing only the case of its own name is fine", async () => {
+    const list = await aliceList("Покупки");
+
+    await expect(actions.renameList({ id: list.id, name: "покупки" })).resolves.toMatchObject({ ok: true });
+    await expect(repos.lists.get(alice, list.id)).resolves.toMatchObject({ name: "покупки" });
   });
 });
 

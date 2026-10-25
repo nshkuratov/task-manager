@@ -41,8 +41,9 @@ export const Confirm: Story = {
   name: "R-LIST-7, R-TEST-1: the question names the task count; confirming deletes once and confirms",
   play: async ({ args, canvasElement }) => {
     const dialog = await openDialog(canvasElement, "Delete “Home renovation” and its 5 tasks?");
+    // The two sentences sit on separate lines (whitespace-pre-line), and the description keeps the break.
     await expect(dialog).toHaveAccessibleDescription(
-      "The list and every task in it will be removed. This can’t be undone.",
+      /^The list and every task in it will be removed\.\s+This can’t be undone\.$/,
     );
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete list" }));
     await waitFor(() => expect(page().queryByRole("alertdialog")).toBeNull());

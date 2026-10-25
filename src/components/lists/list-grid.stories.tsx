@@ -6,7 +6,13 @@ import { ALL_SUMMARIES } from "./story-fixtures";
 const meta = {
   title: "Lists/ListGrid",
   component: ListGrid,
-  args: { summaries: ALL_SUMMARIES, renameList: fn(), deleteList: fn() },
+  args: {
+    summaries: ALL_SUMMARIES,
+    renameList: fn(),
+    deleteList: fn(),
+    timeZone: "Europe/Amsterdam",
+    showTimeZone: false,
+  },
 } satisfies Meta<typeof ListGrid>;
 
 export default meta;

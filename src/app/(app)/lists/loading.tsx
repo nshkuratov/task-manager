@@ -2,8 +2,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ListsLoading() {
   return (
-    <div data-wide-page data-app-bg role="status" className="grid gap-6">
+    <div data-wide-page role="status" className="grid gap-6">
       <span className="sr-only">Loading your lists…</span>
+      <div aria-hidden className="grid gap-1">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-4 w-20" />
+      </div>
       <div aria-hidden className="flex flex-wrap items-center justify-between gap-3">
         <Skeleton className="h-9 w-full rounded-full sm:max-w-xs" />
         <Skeleton className="h-9 w-28" />

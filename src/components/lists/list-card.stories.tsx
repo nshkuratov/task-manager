@@ -9,6 +9,8 @@ const meta = {
   component: ListCard,
   args: {
     summary: SUMMARIES.overdue,
+    timeZone: "Europe/Amsterdam",
+    showTimeZone: false,
     renameList: fn<ListCardProps["renameList"]>(({ id, name }) =>
       Promise.resolve({ ok: true, data: taskList(id, name) }),
     ),
@@ -98,6 +100,14 @@ export const Empty: Story = {
 
 const LONG_NAME = "jdsaogwjeogjweogjiiiiiiiiiiiiiiiiiiiiiwoegjwoegjoewjgowejgowjegojewogjege";
 
+export const UtcFallback: Story = {
+  name: "Without the viewer's zone, the last-updated time says it is UTC",
+  args: { timeZone: "UTC", showTimeZone: true },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector("time")).toHaveTextContent(/UTC$/);
+  },
+};
+
 export const LongName: Story = {
   name: "A long unbroken name is clipped with an ellipsis and keeps the full name as the hover tooltip",
   args: {
@@ -107,8 +117,10 @@ export const LongName: Story = {
     const canvas = within(canvasElement);
     const heading = canvas.getByRole("heading", { level: 2, name: LONG_NAME });
     await expect(heading).toHaveAttribute("title", LONG_NAME);
-    // Clipped, not wrapped or overlapping the counters: the text is longer than the box it sits in.
-    await expect(heading.scrollWidth).toBeGreaterThan(heading.clientWidth);
+    // Clipped, not wrapped or overlapping the counters. The link inside the heading does the clipping, so it is
+    // the box whose text is longer than itself.
+    const link = within(heading).getByRole("link", { name: LONG_NAME });
+    await expect(link.scrollWidth).toBeGreaterThan(link.clientWidth);
     await expectCounters(canvasElement, { New: "0", "In progress": "0", Done: "0", Overdue: "0" });
   },
 };

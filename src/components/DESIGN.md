@@ -17,9 +17,22 @@ Components never use raw colours (`text-white`, `bg-red-500`) or translucent tok
 | Controls | `input`, `ring`, `border` | Field boundaries, focus ring, decorative dividers |
 | Status | `status-new`, `status-in-progress`, `status-done` (+ `-foreground`) | Task status badges |
 | Indicator | `indicator-overdue` (red), `indicator-due-soon` (amber) (+ `-foreground`) | The list card's deadline indicator |
+| Priority | `priority-high`, `priority-medium`, `priority-low` (+ `-foreground`) | Task priority badges |
+| Elevation | `shadow-panel`, `shadow-popover` | Glass panels (cards, tables, empty states); menus and selects |
 
 Status and indicator colours are always paired: the `-foreground` on its own fill, or the `-foreground`
 alone as text on `background`/`card`. The fill colour is never used as text.
+
+## Background image
+
+Every page sits on `bg-app-image` (`public/images/app-background*.webp`, one per theme), which layers over the
+`bg-background` colour. Glass panels (`bg-card/50`–`/80`, `shadow-panel`, `backdrop-blur-sm`) carry most content.
+Text and controls placed **directly** on the image (page headers, breadcrumbs, the lists toolbar, the status
+filter, the login header) sit inside an `.on-image` wrapper: it raises `muted-foreground`, `ring` and (dark)
+`indicator-overdue-foreground`, because the default tokens drop below AA against the image's extreme pixels
+(dark muted text 2.1:1). Never wrap a panel in `.on-image`; panels keep their own surface tokens. A focus ring
+drawn outside a panel onto the image uses `ring-foreground`. `src/styles/contrast.test.ts` asserts the
+`.on-image` values against the recorded extreme pixels of each image.
 
 Fonts: Geist Sans and Geist Mono, self-hosted through the `geist` package (`font-sans`, `font-mono`).
 
@@ -33,13 +46,14 @@ Known limitation: the browser chrome colour (`theme-color`) follows the OS schem
 ## Contrast and focus rules
 
 - Every text pair is at least **4.5:1** in both themes; control boundaries (`input`) and the focus `ring`
-  are at least **3:1** against `background` and `card` (WCAG 1.4.11). `src/styles/contrast.test.ts`
+  are at least **3:1** against `background` and `card` (WCAG 1.4.11), and against the background image inside
+  `.on-image`. `src/styles/contrast.test.ts`
   asserts every pair from the token values (translucent fills are composited over their surface first)
   and prints the measured table; a token that is missing or not a concrete colour fails the test.
 - `border` is **decorative and exempt**: dividers and card edges carry no information. Anything that
   must be seen to be operated uses `input` or `ring` instead.
-- Focus is always visible: a full-strength `ring` (never `ring-ring/50`); menu and select items add an inset `ring` on keyboard focus, because their `accent` highlight alone is near-invisible on `popover`; `aria-invalid` controls use a
-  full-strength destructive ring.
+- Focus is always visible: a full-strength 3px `ring` (never `ring-ring/50`, never thinner); menu and select items add an inset `ring` on keyboard focus, because their `accent` highlight alone is near-invisible on `popover`; `aria-invalid` controls use a
+  full-strength destructive ring, so a focused invalid field still differs from an unfocused one.
 - Colour never carries meaning alone: status and indicator badges also carry text, and an icon where
   space allows.
 - `prefers-reduced-motion: reduce` collapses animations and transitions to near zero.
@@ -81,13 +95,18 @@ Internal terms never reach the screen:
 
 ## Shared components
 
-- `PageHeader` — the view's single `h1` (one headline per view), optional description and actions.
+- `AppFrame` — background image, header, and the scrolling area with the page's one `main`; used by the `(app)`
+  layout and by the root 404, which renders outside it.
+- `PageHeader` — the view's single, visible `h1` (one headline per view), optional description and actions.
 - `EmptyState` — decorative icon (`aria-hidden`), an `h2` title, a sentence and the primary action.
 - `FormField` — label, control, description, error. It injects `id`, `aria-invalid` and
   `aria-describedby` (description, then error) into its single child; the error has `role="alert"`.
-  Pass a custom `id` to `FormField`, never to the child. A field that cannot use the Slot (a Radix `Select`,
+  Pass a custom `id` to `FormField`, never to the child. `errorPlacement="overlay"` hangs a short, one-line
+  error under the field without moving the layout; `descriptionClassName="sr-only"` announces a description the
+  control already shows visually (the list name's `n/80` counter). A field that cannot use the Slot (a Radix `Select`,
   an input with a button beside it) wires its ARIA by hand and renders its message with `FieldError`.
-- `FormErrorBanner` — the form-level `role="alert"` message above the fields. Action-backed forms fill it
+- `FormErrorBanner` — the form-level `role="alert"` message above the fields, in normal flow. (Exception: the
+  login form shows its one-line sign-in error under the submit button without moving the card.) Action-backed forms fill it
   via `splitActionErrors` (`common/action-form.ts`): the first error per known field goes beside its input;
   the form error plus any field error the form has no input for goes in the banner, so none is dropped.
 - `ConfirmDialog` — `AlertDialog` with a consequence sentence and a destructive confirm that shows a
@@ -97,10 +116,13 @@ Internal terms never reach the screen:
 ## Adding a component
 
 1. Prefer a shadcn/Radix primitive in `src/components/ui/`; keep its API and restyle only through tokens.
-2. Shared, feature-agnostic pieces go in `src/components/common/`; feature pieces live with their feature.
-3. Need a new colour? Add the token to **both** `:root` and `.dark`, map it in `@theme inline`, and add
-   its pairs to the list in `src/styles/contrast.test.ts`.
-4. Write stories with `play` functions that query by role and label, plus an explicit `Dark` export with
+2. Restyle a primitive in `src/components/ui/` once (button `size="pill"`, the field look of `Input`/`Textarea`/
+   `SelectTrigger`, dialog chrome) instead of repeating class strings at call sites.
+3. Shared, feature-agnostic pieces go in `src/components/common/`; feature pieces live with their feature.
+4. Need a new colour? Add the token to **both** `:root` and `.dark`, map it in `@theme inline`, and add
+   its pairs to the list in `src/styles/contrast.test.ts`. A token used directly on the background image also
+   needs an `.on-image` check there.
+5. Write stories with `play` functions that query by role and label, plus an explicit `Dark` export with
    `globals: { theme: "dark" }`. Leave menus or dialogs open at the end of a story when axe should scan
    them.
-5. Add `"use client"` only when the component needs state, effects or browser APIs.
+6. Add `"use client"` only when the component needs state, effects or browser APIs.

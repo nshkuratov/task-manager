@@ -22,6 +22,9 @@ export default defineConfig({
           exclude: ["src/test/fixtures/**"],
           // Deadlines are UTC instants rendered in local time; a non-UTC zone makes offset bugs fail here.
           env: { TZ: "Europe/Amsterdam" },
+          // `removeTestDbDir` forces a GC on Windows to release libSQL's file handles before deleting.
+          execArgv: ["--expose-gc"],
+          globalSetup: ["src/test/temp-root.ts"],
         },
       },
       {

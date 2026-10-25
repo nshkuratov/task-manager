@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TASK_PAGE_FRAME } from "@/components/task-card/layout";
 import { TaskCard } from "@/components/task-card/task-card";
 import {
   Breadcrumb,
@@ -29,8 +30,8 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[taskId]">)
   const { task, listName, deadlineInfo } = card;
 
   return (
-    <div data-app-bg className="mx-auto grid max-w-3xl gap-5 pb-8 sm:pb-10">
-      <Breadcrumb>
+    <div className={TASK_PAGE_FRAME}>
+      <Breadcrumb className="on-image">
         <BreadcrumbList className="min-w-0 flex-nowrap">
           <BreadcrumbItem>
             <BreadcrumbLink asChild>

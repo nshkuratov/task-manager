@@ -4,7 +4,8 @@ import { Brand } from "./brand";
 import { UserMenu } from "./user-menu";
 
 export interface AppHeaderProps {
-  email: string;
+  /** The signed-in user's email; null on a page anyone can reach (the root 404), which then has no account menu. */
+  email: string | null;
   signOut: SignOutAction;
 }
 
@@ -15,7 +16,7 @@ export function AppHeader({ email, signOut }: AppHeaderProps) {
         <Brand />
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <UserMenu email={email} signOut={signOut} />
+          {email === null ? null : <UserMenu email={email} signOut={signOut} />}
         </div>
       </div>
     </header>

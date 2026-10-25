@@ -1,8 +1,9 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import type { TaskFacts, TaskList } from "@/contracts/task";
 import type { Db } from "@/server/db/client";
-import { lists, tasks } from "@/server/db/schema";
+import { LIST_NAME_INDEX, lists, tasks } from "@/server/db/schema";
+import { guardUniqueName, nameKey } from "./duplicate-name";
 import { toTaskFacts, toTaskList } from "./mappers";
 
 export interface ListWithTaskFacts {
@@ -54,34 +55,29 @@ export function createListsRepository(db: Db, now: () => Date) {
 
     async create(userId: string, name: string): Promise<TaskList> {
       const at = now().getTime();
-      const [row] = await db
-        .insert(lists)
-        .values({ id: crypto.randomUUID(), userId, name, createdAt: at, updatedAt: at })
-        .returning(listColumns);
+      const [row] = await guardUniqueName(LIST_NAME_INDEX, () =>
+        db
+          .insert(lists)
+          .values({ id: crypto.randomUUID(), userId, name, createdAt: at, updatedAt: at })
+          .returning(listColumns),
+      );
       return toTaskList(row);
     },
 
-    /** The user's list with this name (case-insensitive), optionally ignoring one id: the duplicate-name check. */
-    async findByName(userId: string, name: string, excludeId?: string): Promise<TaskList | null> {
-      const [row] = await db
-        .select(listColumns)
+    /** Whether another of the user's lists has this name, case-insensitively: the duplicate-name check. */
+    async isNameTaken(userId: string, name: string, excludeId?: string): Promise<boolean> {
+      const rows = await db
+        .select({ name: lists.name })
         .from(lists)
-        .where(
-          and(
-            eq(lists.userId, userId),
-            eq(sql`lower(${lists.name})`, name.toLowerCase()),
-            excludeId === undefined ? undefined : ne(lists.id, excludeId),
-          ),
-        );
-      return row === undefined ? null : toTaskList(row);
+        .where(and(eq(lists.userId, userId), excludeId === undefined ? undefined : ne(lists.id, excludeId)));
+      const key = nameKey(name);
+      return rows.some((row) => nameKey(row.name) === key);
     },
 
     async rename(userId: string, listId: string, name: string): Promise<TaskList | null> {
-      const [row] = await db
-        .update(lists)
-        .set({ name, updatedAt: now().getTime() })
-        .where(owned(userId, listId))
-        .returning(listColumns);
+      const [row] = await guardUniqueName(LIST_NAME_INDEX, () =>
+        db.update(lists).set({ name, updatedAt: now().getTime() }).where(owned(userId, listId)).returning(listColumns),
+      );
       return row === undefined ? null : toTaskList(row);
     },
 

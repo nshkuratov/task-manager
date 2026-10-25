@@ -29,8 +29,7 @@ const EMPTY: Parts = { date: "", time: "" };
 
 // Tab reaches the calendar/clock button inside the input's shadow root, where the input stops matching
 // :focus-visible; :focus-within keeps the app's ring on the field while that button has focus.
-const PICKER_FOCUS =
-  "h-10 w-auto rounded-xl px-3 shadow-none focus-within:border-transparent focus-within:ring-1 focus-within:ring-ring";
+const PICKER_FOCUS = "w-auto focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring";
 
 function partsOf(value: string | null | undefined, timeZone: string): Parts {
   if (value === null || value === undefined || value === "") return EMPTY;
@@ -78,7 +77,7 @@ export function DeadlineInput({ value, onChange, onBlur, ref, timeZone, error, r
   const describedBy = error ? `${descriptionId} ${errorId}` : descriptionId;
 
   return (
-    <fieldset className="relative grid gap-2">
+    <fieldset className="grid gap-2">
       <legend className="mb-2 text-sm leading-none font-medium">Deadline</legend>
       <div className="flex flex-wrap items-end gap-2">
         <div className="grid gap-1.5">
@@ -135,9 +134,7 @@ export function DeadlineInput({ value, onChange, onBlur, ref, timeZone, error, r
       <p id={descriptionId} className="text-sm text-muted-foreground">
         Optional. Without a time, the deadline is {DEFAULT_DEADLINE_TIME}.
       </p>
-      <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
-        <FieldError id={errorId} message={error} />
-      </div>
+      <FieldError id={errorId} message={error} />
     </fieldset>
   );
 }

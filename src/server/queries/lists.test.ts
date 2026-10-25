@@ -28,7 +28,10 @@ const fields = (overrides: Partial<TaskFieldsOutput> = {}): TaskFieldsOutput => 
 async function createList(userId: string, name: string, tasks: Partial<TaskFieldsOutput>[] = []) {
   clock = new Date(clock.getTime() + 1000);
   const list = await repos.lists.create(userId, name);
-  for (const task of tasks) await repos.tasks.create(userId, list.id, fields(task));
+  // Titles are unique per list, so each fixture task gets its own.
+  for (const [index, task] of tasks.entries()) {
+    await repos.tasks.create(userId, list.id, fields({ title: `Task ${index + 1}`, ...task }));
+  }
   return list;
 }
 

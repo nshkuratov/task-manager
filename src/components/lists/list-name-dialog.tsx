@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  useId,
   useRef,
   useState,
   useTransition,
@@ -11,13 +10,12 @@ import {
   type RefObject,
   type TransitionStartFunction,
 } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
-import { FieldError, FormErrorBanner } from "@/components/common/form-field";
+import { FormErrorBanner, FormField } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogClose,
@@ -30,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   createListSchema,
+  LIST_NAME_MAX,
   type ActionResult,
   type CreateListInput,
   type CreateListOutput,
@@ -95,7 +94,6 @@ export function ListNameDialog({
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
         showCloseButton={false}
-        className="gap-5 rounded-3xl p-6 sm:max-w-[450px]"
         onEscapeKeyDown={(event) => {
           if (pending) event.preventDefault();
         }}
@@ -112,7 +110,7 @@ export function ListNameDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="text-xl leading-7 font-medium tracking-tight">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <ListNameForm
@@ -163,7 +161,7 @@ function ListNameForm({
     handleSubmit,
     setError,
     setFocus,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateListInput, unknown, CreateListOutput>({
     resolver: zodResolver(createListSchema),
@@ -171,10 +169,8 @@ function ListNameForm({
     ...ACTION_FORM_OPTIONS,
   });
   const { ref: registerRef, ...nameField } = register("name");
-  const nameValue = watch("name") ?? "";
+  const nameValue = useWatch({ control, name: "name" }) ?? "";
   const nameLength = nameValue.length;
-  const nameId = useId();
-  const nameErrorId = `${nameId}-error`;
   // Rename only: nothing to save while the (trimmed) name equals the current one.
   const unchanged = defaultName !== "" && nameValue.trim() === defaultName;
 
@@ -200,41 +196,32 @@ function ListNameForm({
   return (
     <form noValidate className="grid gap-5" onSubmit={(event) => void submit(event)}>
       <FormErrorBanner message={formError} />
-      <div className="grid gap-2">
-        <Label htmlFor={nameId}>Name</Label>
-        <div className="relative">
-          <NameInput
-            id={nameId}
-            count={nameLength}
-            autoComplete="off"
-            placeholder={placeholder}
-            readOnly={pending}
-            aria-invalid={errors.name ? true : undefined}
-            aria-describedby={errors.name ? nameErrorId : undefined}
-            {...nameField}
-            ref={(element: HTMLInputElement | null) => {
-              registerRef(element);
-              inputRef.current = element;
-            }}
-          />
-          <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
-            <FieldError id={nameErrorId} message={errors.name?.message} />
-          </div>
-        </div>
-      </div>
+      <FormField
+        label="Name"
+        description={`Up to ${LIST_NAME_MAX} characters.`}
+        descriptionClassName="sr-only"
+        error={errors.name?.message}
+        errorPlacement="overlay"
+      >
+        <NameInput
+          count={nameLength}
+          autoComplete="off"
+          placeholder={placeholder}
+          readOnly={pending}
+          {...nameField}
+          ref={(element: HTMLInputElement | null) => {
+            registerRef(element);
+            inputRef.current = element;
+          }}
+        />
+      </FormField>
       <DialogFooter className="mt-4 gap-3">
-        <Button asChild variant="outline" className="h-10 rounded-full px-5 dark:bg-transparent">
+        <Button asChild variant="outline" size="pill">
           <DialogClose aria-disabled={pending || undefined} className="aria-disabled:opacity-50">
             Cancel
           </DialogClose>
         </Button>
-        <PendingButton
-          type="submit"
-          pending={pending}
-          pendingLabel={pendingLabel}
-          disabled={unchanged}
-          className="h-10 rounded-full px-5"
-        >
+        <PendingButton type="submit" pending={pending} pendingLabel={pendingLabel} disabled={unchanged} size="pill">
           {submitLabel}
         </PendingButton>
       </DialogFooter>
@@ -242,21 +229,16 @@ function ListNameForm({
   );
 }
 
-const NAME_MAX_LENGTH = 80;
-
-/** The name field with the live character count pinned inside its right edge. */
+/** The name field with the live character count pinned inside its right edge (announced via the field's description). */
 function NameInput({ count, ...props }: ComponentProps<typeof Input> & { count: number }) {
   return (
     <div className="relative">
-      <Input
-        {...props}
-        className="h-10 rounded-xl px-3 pr-14 shadow-none focus-visible:border-transparent focus-visible:ring-1 aria-invalid:border-transparent aria-invalid:ring-1"
-      />
+      <Input {...props} className="pr-14" />
       <span
         aria-hidden
         className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted-foreground tabular-nums"
       >
-        {count}/{NAME_MAX_LENGTH}
+        {count}/{LIST_NAME_MAX}
       </span>
     </div>
   );

@@ -40,7 +40,7 @@ export function UserMenu({ email, signOut }: UserMenuProps) {
           align="end"
           sideOffset={4}
           aria-labelledby={headingId}
-          className="z-50 grid w-64 max-w-[calc(100vw-1rem)] origin-(--radix-popover-content-transform-origin) gap-3 rounded-xl border bg-popover p-3 text-popover-foreground shadow-[0_12px_32px_-16px_color-mix(in_oklab,var(--foreground)_30%,transparent)] data-[side=bottom]:slide-in-from-top-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 grid w-64 max-w-[calc(100vw-1rem)] origin-(--radix-popover-content-transform-origin) gap-3 rounded-xl border bg-popover p-3 text-popover-foreground shadow-popover data-[side=bottom]:slide-in-from-top-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <div className="grid gap-0.5">
             <p id={headingId} className="text-xs text-muted-foreground">

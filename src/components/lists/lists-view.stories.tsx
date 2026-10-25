@@ -21,6 +21,8 @@ function StatefulListsView({ initial, query: initialQuery }: { initial: ListSumm
     <ListsView
       summaries={visible}
       total={summaries.length}
+      timeZone="Europe/Amsterdam"
+      showTimeZone={false}
       query={query}
       onQueryChange={(next) => setQuery(next === "" ? undefined : next)}
       createList={({ name }) => {

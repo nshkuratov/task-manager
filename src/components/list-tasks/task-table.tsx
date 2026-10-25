@@ -109,9 +109,9 @@ export function TaskTable({
       aria-label={`Tasks in ${listName}`}
       // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a horizontally scrolling region must be focusable to scroll by keyboard (WCAG 2.1.1, axe scrollable-region-focusable)
       tabIndex={0}
-      className="relative w-full overflow-x-auto rounded-3xl border bg-card/65 p-2 shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+      className="relative w-full overflow-x-auto rounded-3xl border bg-card/65 p-2 shadow-panel backdrop-blur-sm focus-visible:ring-[3px] focus-visible:ring-foreground focus-visible:outline-none"
     >
-      <table className="w-full min-w-[840px] table-fixed border-separate border-spacing-0 caption-bottom text-sm">
+      <table className="w-full min-w-[840px] table-fixed caption-bottom border-separate border-spacing-0 text-sm">
         <caption className="sr-only">Tasks in {listName}, sorted by urgency</caption>
         <colgroup>
           <col className="w-[38%]" />
@@ -121,20 +121,12 @@ export function TaskTable({
           <col className="w-16" />
         </colgroup>
         <TableHeader className="[&_tr]:border-0">
-          <TableRow className="border-0 bg-muted/45 hover:bg-muted/45 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl">
-            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
-              Title
-            </TableHead>
-            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
-              Status
-            </TableHead>
-            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
-              Priority
-            </TableHead>
-            <TableHead scope="col" className="h-11 px-4 text-xs tracking-widest text-muted-foreground uppercase">
-              Deadline
-            </TableHead>
-            <TableHead scope="col" className="h-11 px-4">
+          <TableRow className="border-0 bg-muted/45 hover:bg-muted/45 [&>th]:h-11 [&>th]:px-4 [&>th]:text-xs [&>th]:tracking-widest [&>th]:text-muted-foreground [&>th]:uppercase [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl">
+            <TableHead scope="col">Title</TableHead>
+            <TableHead scope="col">Status</TableHead>
+            <TableHead scope="col">Priority</TableHead>
+            <TableHead scope="col">Deadline</TableHead>
+            <TableHead scope="col">
               <span className="sr-only">Actions</span>
             </TableHead>
           </TableRow>
@@ -204,7 +196,7 @@ function TaskRow({
           id={titleId}
           href={taskHref(task.id)}
           title={task.title}
-          className="block max-w-full truncate rounded-sm text-base font-medium text-foreground/85 underline-offset-4 hover:underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="block max-w-full truncate rounded-sm text-base font-medium text-foreground underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none"
         >
           {task.title}
         </a>
@@ -227,12 +219,7 @@ function TaskRow({
       <TableCell className="px-4 py-3 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="rounded-full"
-              aria-label={`Actions for ${task.title}`}
-            >
+            <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={`Actions for ${task.title}`}>
               <MoreHorizontalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>

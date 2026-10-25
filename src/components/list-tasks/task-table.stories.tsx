@@ -136,7 +136,11 @@ export const LongTitle: Story = {
   },
   play: async ({ canvasElement }) => {
     const title = within(canvasElement).getByRole("link", { name: LONG_TITLE });
-    await expect(title).toHaveClass("truncate");
+    // Clipped inside its cell: the text is longer than the link's box, and the box ends within the cell.
+    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+    const cell = title.closest("td");
+    await expect(cell).not.toBeNull();
+    await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(cell?.getBoundingClientRect().right ?? 0);
     await expect(title).toHaveAttribute("title", LONG_TITLE);
   },
 };

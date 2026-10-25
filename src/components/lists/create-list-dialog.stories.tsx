@@ -117,9 +117,9 @@ export const PendingBlocksClose: Story = {
     await expect(button).toHaveAttribute("aria-disabled", "true");
     await expect(within(dialog).getByRole("status")).toHaveTextContent("Creating…");
     await expect(input).toHaveAttribute("readonly");
-    await expect(within(dialog).queryByRole("button", { name: "Close" })).toBeNull();
 
     await userEvent.keyboard("{Escape}");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await userEvent.click(button);
     await expect(page().getByRole("dialog", { name: "New list" })).toBeInTheDocument();
     await expect(args.createList).toHaveBeenCalledOnce();

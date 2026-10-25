@@ -85,14 +85,13 @@ export function ConfirmDialog({
     >
       {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
       <AlertDialogContent
-        className="max-h-[calc(100dvh-2rem)] gap-5 overflow-y-auto rounded-3xl p-6 data-[size=default]:sm:max-w-[400px]"
         onEscapeKeyDown={(event) => {
           if (pending) event.preventDefault();
         }}
       >
         <AlertDialogHeader className="place-items-start text-left sm:place-items-start sm:text-left">
           <AlertDialogTitle
-            className="line-clamp-2 max-w-full text-xl leading-7 font-medium tracking-tight break-words"
+            className="line-clamp-2 max-w-full break-words"
             title={typeof title === "string" ? title : undefined}
           >
             {title}
@@ -100,13 +99,13 @@ export function ConfirmDialog({
           <AlertDialogDescription className="whitespace-pre-line">{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-1 flex-row justify-end gap-3">
-          <AlertDialogCancel className="h-10 rounded-full px-5 dark:bg-transparent" disabled={pending}>
+          <AlertDialogCancel size="pill" disabled={pending}>
             {cancelLabel}
           </AlertDialogCancel>
           <PendingButton
             type="button"
             variant={destructive ? "destructive" : "default"}
-            className="h-10 rounded-full px-5"
+            size="pill"
             pending={pending}
             pendingLabel={pendingLabel}
             onClick={() => void confirm()}

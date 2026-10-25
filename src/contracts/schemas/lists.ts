@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { INVALID_SUBMISSION, listIdSchema, trimmedText } from "./common";
 
-export const listNameSchema = trimmedText("Name", 80);
+export const LIST_NAME_MAX = 80;
+export const listNameSchema = trimmedText("Name", LIST_NAME_MAX);
 
 export const createListSchema = z.object({ name: listNameSchema }, { error: INVALID_SUBMISSION });
 export const renameListSchema = z.object({ id: listIdSchema, name: listNameSchema }, { error: INVALID_SUBMISSION });

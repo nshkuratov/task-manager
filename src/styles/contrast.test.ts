@@ -25,6 +25,7 @@ const STATUS_FILLS = [
   "indicator-due-soon",
 ] as const;
 const darkInputFill: Paint = { token: "input", opacity: 0.3, over: "background" };
+const PRIORITY_FILLS = ["priority-high", "priority-medium", "priority-low"] as const;
 
 const PAIRS: Pair[] = [
   { fg: "foreground", bg: "background", min: TEXT },
@@ -47,6 +48,7 @@ const PAIRS: Pair[] = [
   ...STATUS_FILLS.flatMap((fill) =>
     [fill, "background", "card"].map((bg) => ({ fg: `${fill}-foreground`, bg, min: TEXT })),
   ),
+  ...PRIORITY_FILLS.map((fill) => ({ fg: `${fill}-foreground`, bg: fill, min: TEXT })),
   { fg: "foreground", bg: darkInputFill, min: TEXT, themes: ["dark"] },
   { fg: "muted-foreground", bg: darkInputFill, min: TEXT, themes: ["dark"] },
   ...["background", "card"].flatMap((bg) => [
@@ -142,5 +144,41 @@ describe("token helpers", () => {
 
   it("refuses to measure a translucent colour directly", () => {
     expect(() => contrastRatio(resolveColor("oklch(1 0 0 / 10%)"), resolveColor("#000"))).toThrow("Composite");
+  });
+});
+
+/**
+ * `.on-image` overrides, against the pixel of the app background each one contrasts worst with: the darkest
+ * pixel of the light image, the lightest of the dark one (sampled at 200x112 from public/images/*.webp).
+ * Re-measure these if the images change.
+ */
+const IMAGE_EXTREMES: Record<Theme, string> = { light: "rgb(218 227 242)", dark: "rgb(101 106 116)" };
+
+function declarations(selector: RegExp): Record<string, string> {
+  const body = selector.exec(css)?.[1];
+  if (body === undefined) throw new Error(`no ${String(selector)} rule in globals.css`);
+  return Object.fromEntries(
+    [...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => [name, value?.trim()]),
+  );
+}
+
+describe.each(["light", "dark"] as const)("R-THEME-1: text on the background image (%s)", (theme) => {
+  // The cascade: theme tokens, then `.on-image`, then (dark only) `.dark .on-image`.
+  const onImage = {
+    ...tokens[theme],
+    ...declarations(/^\.on-image\s*\{([^}]*)\}/m),
+    ...(theme === "dark" ? declarations(/^\.dark \.on-image\s*\{([^}]*)\}/m) : {}),
+  };
+
+  it.each([
+    ["muted-foreground", TEXT],
+    ["foreground", TEXT],
+    ["indicator-overdue-foreground", TEXT],
+    ["ring", UI],
+  ] as const)("%s meets its WCAG minimum against the image", (token, min) => {
+    const value = onImage[`--${token}`];
+    if (value === undefined) throw new Error(`--${token} is not declared`);
+    const ratio = contrastRatio(resolveColor(value), resolveColor(IMAGE_EXTREMES[theme]));
+    expect(ratio, `${token} on the ${theme} image = ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(min);
   });
 });

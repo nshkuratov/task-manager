@@ -24,7 +24,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-3xl border bg-card/65 px-6 py-12 text-center shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm",
+        "flex flex-col items-center gap-3 rounded-3xl border bg-card/65 px-6 py-12 text-center shadow-panel backdrop-blur-sm",
         className,
       )}
     >

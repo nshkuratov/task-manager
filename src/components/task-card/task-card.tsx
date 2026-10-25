@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { ActionResult, DeleteTaskInput, Task, TaskFieldsInput, UpdateTaskInput } from "@/contracts";
 import type { DeadlineDescription } from "@/domain";
 import { DISPLAY_LOCALE, formatDeadline, formatRelative } from "@/lib/format-deadline";
+import { TASK_CARD_PANEL, TASK_METADATA_BOX } from "./layout";
 
 export interface TaskCardProps {
   task: Task;
@@ -29,12 +30,11 @@ export interface TaskCardProps {
   onSave: (input: UpdateTaskInput) => Promise<ActionResult<unknown>>;
   /** The `deleteTask` action; the card adds the task id. */
   onDelete: (input: DeleteTaskInput) => Promise<ActionResult<{ listId: string }>>;
-  /** `"page"` renders the title as the view's `h1`; `"none"` when the host (a dialog) titles it. */
+  /**
+   * `"page"`: the standalone card, with the title as the view's `h1` and Delete beside "Save changes".
+   * `"none"`: hosted by a dialog, which titles it and passes `formCancel` instead.
+   */
   headline?: "page" | "none";
-  /** Keeps page-only task context out of the compact edit dialog. */
-  showMetadata?: boolean;
-  /** Shows the destructive action below the form. */
-  showDeleteAction?: boolean;
   /** After the "Task saved" toast. */
   onSaved?: () => void;
   /** After the delete toast. Defaults to replacing the URL with the task's list, so Back skips the dead card. */
@@ -50,13 +50,7 @@ export interface TaskCardProps {
 }
 
 /** The reader-facing urgency line: "2 days overdue", "in 5 hours", "No deadline", or "Done". */
-export function DeadlineSummary({
-  deadlineInfo,
-  className,
-}: {
-  deadlineInfo: DeadlineDescription;
-  className?: string;
-}) {
+function DeadlineSummary({ deadlineInfo, className }: { deadlineInfo: DeadlineDescription; className?: string }) {
   const text = formatRelative(deadlineInfo, { locale: DISPLAY_LOCALE }) ?? "Done";
   const { kind } = deadlineInfo;
   return (
@@ -88,8 +82,6 @@ export function TaskCard({
   onSave,
   onDelete,
   headline = "page",
-  showMetadata = true,
-  showDeleteAction = true,
   onSaved,
   onDeleted,
   onDirtyChange,
@@ -112,7 +104,7 @@ export function TaskCard({
 
   const formatInstant = (date: Date) => formatDeadline(date, { locale: DISPLAY_LOCALE, timeZone, now, showTimeZone });
   const isStandalonePage = headline === "page";
-  const deleteAction = showDeleteAction ? (
+  const secondaryAction = isStandalonePage ? (
     <DeleteTaskDialog
       title={task.title}
       onDelete={() => onDelete({ id: task.id })}
@@ -122,49 +114,38 @@ export function TaskCard({
         else router.replace(`/lists/${listId}`);
       }}
       trigger={
-        <Button variant="outline" className="h-10 rounded-full px-5 text-destructive dark:bg-transparent">
+        <Button variant="outline" size="pill" className="text-destructive">
           <Trash2Icon aria-hidden />
           Delete task
         </Button>
       }
     />
-  ) : undefined;
+  ) : (
+    formCancel
+  );
 
   return (
-    <div
-      className={cn(
-        "grid gap-6",
-        isStandalonePage &&
-          "rounded-3xl border bg-card/70 p-6 shadow-[0_16px_48px_-24px_color-mix(in_oklab,var(--foreground)_20%,transparent)] backdrop-blur-sm sm:p-8",
-      )}
-    >
+    <div className={cn("grid gap-6", isStandalonePage && TASK_CARD_PANEL)}>
       {isStandalonePage ? (
         <PageHeader title={task.title} description={<DeadlineSummary deadlineInfo={deadlineInfo} />} />
       ) : null}
 
-      {showMetadata ? (
-        <dl
-          className={cn(
-            "grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm",
-            isStandalonePage && "w-full max-w-sm rounded-2xl bg-muted/40 p-4",
-          )}
-        >
-          <dt className="text-muted-foreground">List</dt>
-          <dd className="min-w-0 break-words">
-            <Link href={`/lists/${task.listId}`} className="font-medium underline-offset-4 hover:underline">
-              {listName}
-            </Link>
-          </dd>
-          <dt className="text-muted-foreground">Created</dt>
-          <dd>
-            <time dateTime={task.createdAt.toISOString()}>{formatInstant(task.createdAt)}</time>
-          </dd>
-          <dt className="text-muted-foreground">Updated</dt>
-          <dd>
-            <time dateTime={task.updatedAt.toISOString()}>{formatInstant(task.updatedAt)}</time>
-          </dd>
-        </dl>
-      ) : null}
+      <dl className={cn("grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm", isStandalonePage && TASK_METADATA_BOX)}>
+        <dt className="text-muted-foreground">List</dt>
+        <dd className="min-w-0 break-words">
+          <Link href={`/lists/${task.listId}`} className="font-medium underline-offset-4 hover:underline">
+            {listName}
+          </Link>
+        </dd>
+        <dt className="text-muted-foreground">Created</dt>
+        <dd>
+          <time dateTime={task.createdAt.toISOString()}>{formatInstant(task.createdAt)}</time>
+        </dd>
+        <dt className="text-muted-foreground">Updated</dt>
+        <dd>
+          <time dateTime={task.updatedAt.toISOString()}>{formatInstant(task.updatedAt)}</time>
+        </dd>
+      </dl>
 
       <TaskForm
         mode="edit"
@@ -176,8 +157,8 @@ export function TaskCard({
           onSaved?.();
         }}
         {...(onDirtyChange === undefined ? {} : { onDirtyChange })}
-        {...(formCancel === undefined && deleteAction === undefined ? {} : { cancel: formCancel ?? deleteAction })}
-        spreadActions={isStandalonePage && deleteAction !== undefined}
+        {...(secondaryAction === undefined ? {} : { cancel: secondaryAction })}
+        spreadActions={isStandalonePage}
       />
     </div>
   );

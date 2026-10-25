@@ -4,7 +4,7 @@ import type { TaskFieldsOutput } from "@/contracts/schemas/tasks";
 import type { TaskList } from "@/contracts/task";
 import { tasks } from "@/server/db/schema";
 import { createTestDb, insertTestUser, type TestDb } from "@/server/db/testing";
-import { createRepositories, type Repositories } from "@/server/repositories";
+import { createRepositories, DuplicateNameError, type Repositories } from "@/server/repositories";
 
 const START = new Date("2026-10-22T12:00:00Z");
 let clock: Date;
@@ -60,8 +60,8 @@ describe("tasks repository", () => {
 
   it("round-trips deadlines exactly, to the millisecond, and null", async () => {
     const precise = new Date("2026-12-31T23:59:59.987Z");
-    const dated = await createTask({ deadline: precise });
-    const undated = await createTask({ deadline: null });
+    const dated = await createTask({ title: "Dated", deadline: precise });
+    const undated = await createTask({ title: "Undated", deadline: null });
     expect((await repos.tasks.get(alice, dated.id))?.deadline?.getTime()).toBe(precise.getTime());
     expect((await rawRow(dated.id))?.deadline).toBe(precise.getTime());
     expect((await repos.tasks.get(alice, undated.id))?.deadline).toBeNull();
@@ -146,5 +146,34 @@ describe("tasks repository", () => {
   it("rejects instead of swallowing when the database is gone", async () => {
     testDb.client.close();
     await expect(repos.tasks.listForList(alice, list.id)).rejects.toThrow();
+  });
+});
+
+describe("tasks repository: duplicate titles", () => {
+  it("R-TASKS-2: finds a taken title case-insensitively in any script, scoped to the list", async () => {
+    const report = await repos.tasks.create(alice, list.id, fields({ title: "Отчёт" }));
+    const other = await repos.lists.create(alice, "Home");
+    if (report === null) throw new Error("test setup");
+
+    for (const title of ["Отчёт", "отчёт", "ОТЧЁТ"]) {
+      expect(await repos.tasks.isTitleTaken(alice, list.id, title)).toBe(true);
+    }
+    expect(await repos.tasks.isTitleTaken(alice, list.id, "План")).toBe(false);
+    expect(await repos.tasks.isTitleTaken(alice, other.id, "Отчёт")).toBe(false);
+    expect(await repos.tasks.isTitleTaken(alice, list.id, "отчёт", report.id)).toBe(false);
+    expect(await repos.tasks.isTitleTaken(bob, list.id, "Отчёт")).toBe(false);
+  });
+
+  it("R-TASKS-2: the database rejects a duplicate the check missed with a typed error", async () => {
+    const task = await repos.tasks.create(alice, list.id, fields({ title: "Write report" }));
+    await repos.tasks.create(alice, list.id, fields({ title: "Book flights" }));
+    if (task === null) throw new Error("test setup");
+
+    await expect(repos.tasks.create(alice, list.id, fields({ title: "write REPORT" }))).rejects.toBeInstanceOf(
+      DuplicateNameError,
+    );
+    await expect(repos.tasks.update(alice, task.id, fields({ title: "book flights" }))).rejects.toBeInstanceOf(
+      DuplicateNameError,
+    );
   });
 });

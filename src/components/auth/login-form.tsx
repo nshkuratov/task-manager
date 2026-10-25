@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "cn";
 import { EyeIcon, EyeOffIcon, LockKeyholeIcon, MailIcon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { ACTION_FORM_OPTIONS, splitActionErrors } from "@/components/common/action-form";
-import { FieldError } from "@/components/common/form-field";
+import { FieldError, OVERLAY_ERROR } from "@/components/common/form-field";
 import { PendingButton } from "@/components/common/pending-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ import { loginSchema, type ActionResult, type LoginInput } from "@/contracts";
 export type SignInAction = (input: LoginInput) => Promise<ActionResult<unknown> | void>;
 
 const FIELDS = ["email", "password"] as const;
+const LOGIN_INPUT = "h-11.5 bg-background/30 pl-12 text-base focus-visible:border-foreground md:text-sm";
+const FIELD_ICON = "pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground";
 
 export function LoginForm({ signIn }: { signIn: SignInAction }) {
   const [pending, startTransition] = useTransition();
@@ -71,10 +74,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
           Email
         </Label>
         <div className="relative">
-          <MailIcon
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
-          />
+          <MailIcon aria-hidden className={FIELD_ICON} />
           <Input
             id={emailId}
             type="email"
@@ -84,10 +84,10 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
             readOnly={pending}
             aria-invalid={errors.email ? true : undefined}
             aria-describedby={errors.email ? emailErrorId : undefined}
-            className="h-11.5 rounded-xl bg-background/30 pr-4 pl-12 text-base shadow-none focus-visible:border-foreground focus-visible:ring-0 aria-invalid:ring-0 aria-invalid:focus-visible:border-destructive md:text-sm"
+            className={cn(LOGIN_INPUT, "pr-4")}
             {...register("email")}
           />
-          <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
+          <div className={OVERLAY_ERROR}>
             <FieldError id={emailErrorId} message={errors.email?.message} />
           </div>
         </div>
@@ -99,10 +99,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
           Password
         </Label>
         <div className="relative">
-          <LockKeyholeIcon
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
-          />
+          <LockKeyholeIcon aria-hidden className={FIELD_ICON} />
           <Input
             id={passwordId}
             type={showPassword ? "text" : "password"}
@@ -111,7 +108,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
             readOnly={pending}
             aria-invalid={errors.password ? true : undefined}
             aria-describedby={errors.password ? passwordErrorId : undefined}
-            className="h-11.5 rounded-xl bg-background/30 pr-12 pl-12 text-base shadow-none focus-visible:border-foreground focus-visible:ring-0 aria-invalid:ring-0 aria-invalid:focus-visible:border-destructive md:text-sm"
+            className={cn(LOGIN_INPUT, "pr-12")}
             {...register("password")}
           />
           <Button
@@ -128,7 +125,7 @@ export function LoginForm({ signIn }: { signIn: SignInAction }) {
           >
             {showPassword ? <EyeOffIcon aria-hidden className="size-5" /> : <EyeIcon aria-hidden className="size-5" />}
           </Button>
-          <div className="absolute inset-x-0 top-full mt-0.5 [&>p]:text-xs [&>p]:leading-4">
+          <div className={OVERLAY_ERROR}>
             <FieldError id={passwordErrorId} message={errors.password?.message} />
           </div>
         </div>

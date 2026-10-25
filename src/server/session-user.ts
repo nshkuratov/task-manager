@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { requireSession, type Session } from "@/server/auth/session";
+import { getSession, requireSession, type Session } from "@/server/auth/session";
 import { getRepositories, type Repositories, type UserIdentity } from "@/server/repositories";
 
 export interface SessionUserDeps {
@@ -29,3 +29,9 @@ export const getSessionUser = cache(async (): Promise<UserIdentity> =>
     redirectToLogin: () => redirect("/login"),
   }),
 );
+
+/** The signed-in user's identity, or null when signed out: for pages anyone can reach, such as the root 404. */
+export const getOptionalSessionUser = cache(async (): Promise<UserIdentity | null> => {
+  const session = await getSession();
+  return session === null ? null : (await getRepositories()).users.findById(session.userId);
+});

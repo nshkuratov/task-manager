@@ -17,7 +17,7 @@ const meta = {
   component: ListHeader,
   args: {
     summary: summary({ new: 2, inProgress: 1, done: 2, overdue: 1, total: 5 }, 2 / 5),
-    actions: <Button className="h-11 rounded-full px-5">Add task</Button>,
+    actions: <Button size="pill-lg">Add task</Button>,
   },
 } satisfies Meta<typeof ListHeader>;
 

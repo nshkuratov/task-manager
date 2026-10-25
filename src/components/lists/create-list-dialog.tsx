@@ -26,7 +26,7 @@ export function CreateListDialog({ createList, query, trigger }: CreateListDialo
       placeholder="e.g. Product launch, Home, Reading..."
       trigger={
         trigger ?? (
-          <Button className="h-11 rounded-full px-5">
+          <Button size="pill-lg">
             <PlusIcon aria-hidden />
             New list
           </Button>

@@ -54,6 +54,51 @@ export const Submit: Story = {
   },
 };
 
+export const UnchangedName: Story = {
+  name: "R-LIST-6: the current name, even re-typed, cannot be saved",
+  play: async ({ args }) => {
+    const { dialog, input } = await findInput();
+    const save = within(dialog).getByRole("button", { name: "Save name" });
+    await expect(save).toBeDisabled();
+    await userEvent.clear(input);
+    await userEvent.type(input, " Groceries ");
+    await expect(save).toBeDisabled();
+    await userEvent.type(input, "!");
+    await expect(save).toBeEnabled();
+    await expect(args.renameList).not.toHaveBeenCalled();
+  },
+};
+
+export const DuplicateName: Story = {
+  name: "R-LIST-6: a name another list has is refused on the field, and the dialog stays open",
+  args: {
+    renameList: fn<RenameListDialogProps["renameList"]>(() =>
+      Promise.resolve({ ok: false, fieldErrors: { name: ["A list with this name already exists."] } }),
+    ),
+  },
+  play: async ({ args }) => {
+    const { dialog, input } = await findInput();
+    await userEvent.clear(input);
+    await userEvent.type(input, "Work");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save name" }));
+    await expect(await within(dialog).findByRole("alert")).toHaveTextContent("A list with this name already exists.");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await expect(input).toHaveAccessibleDescription(/A list with this name already exists\./);
+    await waitFor(() => expect(input).toHaveFocus());
+    await expect(args.onOpenChange).not.toHaveBeenCalled();
+  },
+};
+
+export const CancelCloses: Story = {
+  name: "R-LIST-6: Cancel asks to close without renaming",
+  play: async ({ args }) => {
+    const { dialog } = await findInput();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await expect(args.onOpenChange).toHaveBeenCalledWith(false);
+    await expect(args.renameList).not.toHaveBeenCalled();
+  },
+};
+
 export const ListGone: Story = {
   name: "R-LIST-6: renaming a list that no longer exists says so and stays open",
   args: {

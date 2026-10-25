@@ -112,9 +112,14 @@ export function taskTitles(page: Page): Locator {
   return page.getByRole("table").getByRole("rowgroup").nth(1).getByRole("link");
 }
 
+/** A task row's actions menu trigger. */
+export function taskActionsButton(page: Page, title: string): Locator {
+  return page.getByRole("button", { name: `Actions for ${title}`, exact: true });
+}
+
 /** Opens the intercepted edit modal from a task row's actions menu. */
 export async function openTaskEdit(page: Page, title: string): Promise<void> {
-  await page.getByRole("button", { name: `Actions for ${title}`, exact: true }).click();
+  await taskActionsButton(page, title).click();
   await page.getByRole("menuitem", { name: "Edit", exact: true }).click();
 }
 
